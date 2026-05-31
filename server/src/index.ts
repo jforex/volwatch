@@ -4,30 +4,40 @@ import "dotenv/config";
 
 const PREDICT_PACKAGE_ID =
   "0xf5ea2b3749c65d6e56507cc35388719aadb28f9cab873696a2f8687f5c785138";
+const PREDICT_OBJECT_ID =
+  "0xc8736204d12f0a7277c86388a68bf8a194b0a14c5538ad13f22cbd8e2a38028a";
 
 const POLL_INTERVAL_MS = 3000;
+const VAULT_POLL_INTERVAL_MS = 10_000;
 const WS_PORT = Number(process.env.WS_PORT ?? 8080);
+
+// dUSDC has 6 decimals
+const QUOTE_DECIMALS = 1e6;
+// PLP supply uses same scale
+const PLP_DECIMALS = 1e6;
+// Risk config and rate limiter scales (1e9 fixed point used widely in Predict)
+const PCT_SCALE = 1e9;
 
 const client = new SuiJsonRpcClient({
   url: getJsonRpcFullnodeUrl("testnet"),
   network: "testnet",
 });
 
-// --- WebSocket fan-out ---
 const wss = new WebSocketServer({ port: WS_PORT });
 const clients = new Set<WebSocket>();
 
-// Backfill cache — sent to every newly connected client so they don't wait
-// for the next on-chain tick to learn about active oracles + their state.
 let backfill: NormalizedEvent[] = [];
+let latestVault: VaultSnapshot | null = null;
 
 wss.on("connection", (ws) => {
   clients.add(ws);
   console.log(`[ws] client connected (${clients.size} total)`);
   ws.send(JSON.stringify({ type: "hello", at: Date.now() }));
-  // Replay backfill so the client has full state immediately.
   for (const evt of backfill) {
     ws.send(JSON.stringify({ type: "event", data: evt }));
+  }
+  if (latestVault) {
+    ws.send(JSON.stringify({ type: "vault", data: latestVault }));
   }
   ws.on("close", () => {
     clients.delete(ws);
@@ -75,6 +85,26 @@ type NormalizedEvent =
       ts: number;
     };
 
+export type VaultSnapshot = {
+  ts: number;
+  vaultBalance: number; // USD
+  plpSupply: number; // shares
+  pricePerShare: number; // USD per share
+  totalMaxPayout: number; // USD
+  totalMTM: number; // USD
+  utilizationPct: number; // 0–100
+  exposureCeilingPct: number; // protocol-defined cap, 0–100
+  headroomPct: number; // ceiling - utilization
+  activeStrikeMatrices: number;
+  settledOraclesCount: number;
+  tradingPaused: boolean;
+  withdrawalLimiter: {
+    enabled: boolean;
+    available: number;
+    capacity: number;
+  };
+};
+
 function normalize(
   eventType: string,
   payload: Record<string, unknown>,
@@ -121,8 +151,6 @@ function normalize(
   }
 }
 
-// Fetch the most recent N events of a given event type and return them
-// normalized, oldest-first. Used at startup to backfill state.
 async function fetchRecent(eventTypeShort: string, n: number) {
   const fullType = `${PREDICT_PACKAGE_ID}::oracle::${eventTypeShort}`;
   const res = await client.queryEvents({
@@ -131,7 +159,6 @@ async function fetchRecent(eventTypeShort: string, n: number) {
     order: "descending",
   });
   const out: NormalizedEvent[] = [];
-  // Reverse so the freshest is last (so app state ends up reflecting the latest)
   for (let i = res.data.length - 1; i >= 0; i--) {
     const e = res.data[i];
     const tsMs = e.timestampMs ? Number(e.timestampMs) : Date.now();
@@ -141,9 +168,65 @@ async function fetchRecent(eventTypeShort: string, n: number) {
   return out;
 }
 
+async function pollVault(): Promise<VaultSnapshot | null> {
+  try {
+    const res = await client.getObject({
+      id: PREDICT_OBJECT_ID,
+      options: { showContent: true },
+    });
+    // Type narrowing is messy here — Sui SDK returns a complex union. Walk it.
+    const content = (res as any)?.data?.content;
+    if (!content || content.dataType !== "moveObject") return null;
+    const f = content.fields;
+
+    const vaultBalance = Number(f.vault.fields.balance) / QUOTE_DECIMALS;
+    const plpSupply =
+      Number(f.treasury_cap.fields.total_supply.fields.value) / PLP_DECIMALS;
+    const pricePerShare = plpSupply > 0 ? vaultBalance / plpSupply : 0;
+    const totalMaxPayout = Number(f.vault.fields.total_max_payout) / QUOTE_DECIMALS;
+    const totalMTM = Number(f.vault.fields.total_mtm) / QUOTE_DECIMALS;
+    const utilizationPct =
+      vaultBalance > 0 ? (totalMaxPayout / vaultBalance) * 100 : 0;
+    const exposureCeilingPct =
+      Number(f.risk_config.fields.max_total_exposure_pct) / PCT_SCALE * 100;
+    const headroomPct = exposureCeilingPct - utilizationPct;
+    const activeStrikeMatrices = Number(
+      f.vault.fields.oracle_matrices.fields.size ?? 0,
+    );
+    const settledOraclesCount = Number(
+      f.vault.fields.settled_oracles.fields.size ?? 0,
+    );
+    const tradingPaused = !!f.trading_paused;
+    const wl = f.withdrawal_limiter.fields;
+
+    return {
+      ts: Date.now(),
+      vaultBalance,
+      plpSupply,
+      pricePerShare,
+      totalMaxPayout,
+      totalMTM,
+      utilizationPct,
+      exposureCeilingPct,
+      headroomPct,
+      activeStrikeMatrices,
+      settledOraclesCount,
+      tradingPaused,
+      withdrawalLimiter: {
+        enabled: !!wl.enabled,
+        available: Number(wl.available) / QUOTE_DECIMALS,
+        capacity: Number(wl.capacity) / QUOTE_DECIMALS,
+      },
+    };
+  } catch (err: any) {
+    console.error("[vault poll error]", err.message);
+    return null;
+  }
+}
+
 let cursor: { txDigest: string; eventSeq: string } | null = null;
 
-async function pollOnce() {
+async function pollEvents() {
   const res = await client.queryEvents({
     query: { MoveModule: { package: PREDICT_PACKAGE_ID, module: "oracle" } },
     cursor: cursor ?? null,
@@ -189,11 +272,10 @@ async function pollOnce() {
 async function main() {
   console.log("VolWatch backend starting…");
   console.log("Predict package:", PREDICT_PACKAGE_ID);
+  console.log("Predict object:", PREDICT_OBJECT_ID);
   console.log(`WebSocket server: ws://localhost:${WS_PORT}`);
-  console.log(`Polling every ${POLL_INTERVAL_MS}ms\n`);
+  console.log(`Event poll: ${POLL_INTERVAL_MS}ms · Vault poll: ${VAULT_POLL_INTERVAL_MS}ms\n`);
 
-  // Backfill: load recent state for new clients so they don't start blank.
-  // We want activations (for expiry), latest SVI, latest prices.
   console.log("Backfilling recent state…");
   const [activations, svis, prices] = await Promise.all([
     fetchRecent("OracleActivated", 50),
@@ -202,10 +284,17 @@ async function main() {
   ]);
   backfill = [...activations, ...svis, ...prices];
   console.log(
-    `Backfill ready: ${activations.length} activated, ${svis.length} svi, ${prices.length} prices\n`,
+    `Backfill ready: ${activations.length} activated, ${svis.length} svi, ${prices.length} prices`,
   );
 
-  // Seed cursor at head so we only forward NEW events from here on.
+  console.log("Initial vault snapshot…");
+  latestVault = await pollVault();
+  if (latestVault) {
+    console.log(
+      `Vault: $${latestVault.vaultBalance.toFixed(2)} · PLP $${latestVault.pricePerShare.toFixed(4)} · util ${latestVault.utilizationPct.toFixed(2)}%\n`,
+    );
+  }
+
   const seed = await client.queryEvents({
     query: { MoveModule: { package: PREDICT_PACKAGE_ID, module: "oracle" } },
     limit: 1,
@@ -220,8 +309,19 @@ async function main() {
   }
 
   setInterval(() => {
-    pollOnce().catch((err) => console.error("[poll error]", err.message));
+    pollEvents().catch((err) => console.error("[poll error]", err.message));
   }, POLL_INTERVAL_MS);
+
+  setInterval(async () => {
+    const snap = await pollVault();
+    if (snap) {
+      latestVault = snap;
+      broadcast({ type: "vault", data: snap });
+      console.log(
+        `[vault] $${snap.vaultBalance.toFixed(2)} · util ${snap.utilizationPct.toFixed(2)}% · payout $${snap.totalMaxPayout.toFixed(2)}`,
+      );
+    }
+  }, VAULT_POLL_INTERVAL_MS);
 }
 
 main().catch((err) => {

@@ -6,16 +6,14 @@ import { formatTime, formatUSD, shortId } from "./lib/format";
 import { SpotSparkline } from "./components/SpotSparkline";
 import { SmileChart } from "./components/SmileChart";
 import { OracleList } from "./components/OracleList";
+import { PLPDashboard } from "./components/PLPDashboard";
+import { ArbCheck } from "./components/ArbCheck";
 
 function nearestActiveOracle(
   oracles: Record<string, OracleState>,
 ): OracleState | null {
   const candidates = Object.values(oracles).filter(
-    (o) =>
-      o.svi &&
-      o.forward &&
-      o.expiryMs &&
-      o.expiryMs > Date.now(),
+    (o) => o.svi && o.forward && o.expiryMs && o.expiryMs > Date.now(),
   );
   if (candidates.length === 0) return null;
   candidates.sort((a, b) => (a.expiryMs ?? 0) - (b.expiryMs ?? 0));
@@ -23,13 +21,11 @@ function nearestActiveOracle(
 }
 
 export default function Home() {
-  const { status, recent, latestSpot, oracleCount, spotHistory, oracles } =
+  const { status, recent, latestSpot, oracleCount, spotHistory, oracles, vault } =
     useVolStream();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Auto-select the nearest active oracle if nothing is selected,
-  // or if the previously selected one expired / vanished.
   useEffect(() => {
     const stillValid =
       selectedId &&
@@ -78,7 +74,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Top row: spot card + stats */}
+      {/* Top row */}
       <section className="mx-auto mt-6 grid max-w-7xl grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2 rounded-lg border border-neutral-900 bg-neutral-950 p-5">
           <div className="flex items-end justify-between">
@@ -105,7 +101,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Middle row: oracle list (left) + smile chart (right) */}
+      {/* PLP risk */}
+      <section className="mx-auto mt-6 max-w-7xl">
+        <PLPDashboard vault={vault} />
+      </section>
+
+      {/* Arb checker */}
+      <section className="mx-auto mt-6 max-w-7xl">
+        <ArbCheck oracles={oracles} />
+      </section>
+
+      {/* Oracle list + smile */}
       <section className="mx-auto mt-6 grid max-w-7xl grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-1">
           <OracleList

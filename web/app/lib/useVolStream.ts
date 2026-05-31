@@ -36,6 +36,26 @@ export type VolEvent =
       ts: number;
     };
 
+export type VaultSnapshot = {
+  ts: number;
+  vaultBalance: number;
+  plpSupply: number;
+  pricePerShare: number;
+  totalMaxPayout: number;
+  totalMTM: number;
+  utilizationPct: number;
+  exposureCeilingPct: number;
+  headroomPct: number;
+  activeStrikeMatrices: number;
+  settledOraclesCount: number;
+  tradingPaused: boolean;
+  withdrawalLimiter: {
+    enabled: boolean;
+    available: number;
+    capacity: number;
+  };
+};
+
 type Status = "connecting" | "open" | "closed";
 
 export type SpotPoint = { ts: number; spot: number };
@@ -58,10 +78,6 @@ export type OracleState = {
 const MAX_RECENT = 100;
 const MAX_SPOT_POINTS = 120;
 
-// SVI fixed-point scales differ per parameter.
-// Empirically, a/b/m/sigma look like 1e6-scaled, rho like 1e9-scaled.
-// Reference event: a=7112, b=549259, m=1097485, sigma=1056137 → 0.007, 0.55, 0.001, 1.06
-// rho=419465799 → 0.42 (correlation, must be in [-1, 1])
 const SCALE_AB_M_SIGMA = 1e6;
 const SCALE_RHO = 1e9;
 
@@ -79,6 +95,7 @@ export function useVolStream() {
   const [latestSpot, setLatestSpot] = useState<number | null>(null);
   const [spotHistory, setSpotHistory] = useState<SpotPoint[]>([]);
   const [oracles, setOracles] = useState<Record<string, OracleState>>({});
+  const [vault, setVault] = useState<VaultSnapshot | null>(null);
   const lastSpotTsRef = useRef<number>(0);
 
   useEffect(() => {
@@ -91,6 +108,12 @@ export function useVolStream() {
     ws.onmessage = (msg) => {
       try {
         const parsed = JSON.parse(msg.data);
+
+        if (parsed.type === "vault") {
+          setVault(parsed.data as VaultSnapshot);
+          return;
+        }
+
         if (parsed.type !== "event") return;
         const e: VolEvent = parsed.data;
 
@@ -144,7 +167,6 @@ export function useVolStream() {
     return () => ws.close();
   }, []);
 
-  // Only count oracles whose expiry is still in the future.
   const activeOracleCount = useMemo(() => {
     const now = Date.now();
     return Object.values(oracles).filter(
@@ -159,5 +181,6 @@ export function useVolStream() {
     spotHistory,
     oracles,
     oracleCount: activeOracleCount,
+    vault,
   };
 }
