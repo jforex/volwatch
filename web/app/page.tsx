@@ -1,12 +1,32 @@
 "use client";
 
-import { useVolStream } from "./lib/useVolStream";
+import { useMemo } from "react";
+import { useVolStream, OracleState } from "./lib/useVolStream";
 import { formatTime, formatUSD, shortId } from "./lib/format";
 import { SpotSparkline } from "./components/SpotSparkline";
+import { SmileChart } from "./components/SmileChart";
+
+function pickFeaturedOracle(
+  oracles: Record<string, OracleState>,
+): OracleState | null {
+  const candidates = Object.values(oracles).filter(
+    (o) =>
+      o.svi &&
+      o.forward &&
+      o.expiryMs &&
+      o.expiryMs > Date.now(), // not expired
+  );
+  if (candidates.length === 0) return null;
+  // Nearest-expiry first — most actively-priced smile
+  candidates.sort((a, b) => (a.expiryMs ?? 0) - (b.expiryMs ?? 0));
+  return candidates[0];
+}
 
 export default function Home() {
-  const { status, recent, latestSpot, oracleCount, spotHistory } =
+  const { status, recent, latestSpot, oracleCount, spotHistory, oracles } =
     useVolStream();
+
+  const featured = useMemo(() => pickFeaturedOracle(oracles), [oracles]);
 
   return (
     <main className="min-h-screen bg-black px-6 py-8 text-neutral-200">
@@ -39,9 +59,8 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Top row: BTC spot (with sparkline) + small stats */}
+      {/* Top row: spot card + small stats */}
       <section className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Spot card spans 2 columns, contains the chart */}
         <div className="lg:col-span-2 rounded-lg border border-neutral-900 bg-neutral-950 p-5">
           <div className="flex items-end justify-between">
             <div>
@@ -67,6 +86,17 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Smile chart — the money chart */}
+      <section className="mx-auto mt-6 max-w-6xl">
+        {featured ? (
+          <SmileChart oracle={featured} />
+        ) : (
+          <div className="rounded-lg border border-neutral-900 bg-neutral-950 p-10 text-center text-sm text-neutral-600">
+            Waiting for full oracle state (SVI + forward + expiry)…
+          </div>
+        )}
+      </section>
+
       {/* Live tape */}
       <section className="mx-auto mt-6 max-w-6xl">
         <div className="mb-2 flex items-center justify-between">
@@ -84,7 +114,7 @@ export default function Home() {
             </div>
           ) : (
             <ul className="divide-y divide-neutral-900 font-mono text-xs">
-              {recent.map((e, i) => (
+              {recent.slice(0, 30).map((e, i) => (
                 <li
                   key={i}
                   className="flex items-center gap-3 px-4 py-2 hover:bg-neutral-900/50"

@@ -17,17 +17,23 @@ const client = new SuiJsonRpcClient({
 const wss = new WebSocketServer({ port: WS_PORT });
 const clients = new Set<WebSocket>();
 
+// Backfill cache — sent to every newly connected client so they don't wait
+// for the next on-chain tick to learn about active oracles + their state.
+let backfill: NormalizedEvent[] = [];
+
 wss.on("connection", (ws) => {
   clients.add(ws);
   console.log(`[ws] client connected (${clients.size} total)`);
   ws.send(JSON.stringify({ type: "hello", at: Date.now() }));
+  // Replay backfill so the client has full state immediately.
+  for (const evt of backfill) {
+    ws.send(JSON.stringify({ type: "event", data: evt }));
+  }
   ws.on("close", () => {
     clients.delete(ws);
     console.log(`[ws] client disconnected (${clients.size} total)`);
   });
-  ws.on("error", () => {
-    clients.delete(ws);
-  });
+  ws.on("error", () => clients.delete(ws));
 });
 
 function broadcast(message: object) {
@@ -36,9 +42,6 @@ function broadcast(message: object) {
     if (ws.readyState === WebSocket.OPEN) ws.send(payload);
   }
 }
-
-// --- Event polling ---
-let cursor: { txDigest: string; eventSeq: string } | null = null;
 
 type NormalizedEvent =
   | {
@@ -53,8 +56,8 @@ type NormalizedEvent =
       oracleId: string;
       a: string;
       b: string;
-      m: { isNegative: boolean; magnitude: string };
-      rho: { isNegative: boolean; magnitude: string };
+      m: { is_negative: boolean; magnitude: string };
+      rho: { is_negative: boolean; magnitude: string };
       sigma: string;
       ts: number;
     }
@@ -72,11 +75,11 @@ type NormalizedEvent =
       ts: number;
     };
 
-function shortenId(id: string) {
-  return `${id.slice(0, 6)}…${id.slice(-4)}`;
-}
-
-function normalize(eventType: string, payload: Record<string, unknown>, tsMs: number): NormalizedEvent | null {
+function normalize(
+  eventType: string,
+  payload: Record<string, unknown>,
+  tsMs: number,
+): NormalizedEvent | null {
   const shortType = eventType.split("::").slice(-1)[0];
   switch (shortType) {
     case "OraclePricesUpdated":
@@ -93,8 +96,8 @@ function normalize(eventType: string, payload: Record<string, unknown>, tsMs: nu
         oracleId: String(payload.oracle_id),
         a: String(payload.a),
         b: String(payload.b),
-        m: payload.m as { isNegative: boolean; magnitude: string },
-        rho: payload.rho as { isNegative: boolean; magnitude: string },
+        m: payload.m as { is_negative: boolean; magnitude: string },
+        rho: payload.rho as { is_negative: boolean; magnitude: string },
         sigma: String(payload.sigma),
         ts: tsMs,
       };
@@ -118,6 +121,28 @@ function normalize(eventType: string, payload: Record<string, unknown>, tsMs: nu
   }
 }
 
+// Fetch the most recent N events of a given event type and return them
+// normalized, oldest-first. Used at startup to backfill state.
+async function fetchRecent(eventTypeShort: string, n: number) {
+  const fullType = `${PREDICT_PACKAGE_ID}::oracle::${eventTypeShort}`;
+  const res = await client.queryEvents({
+    query: { MoveEventType: fullType },
+    limit: n,
+    order: "descending",
+  });
+  const out: NormalizedEvent[] = [];
+  // Reverse so the freshest is last (so app state ends up reflecting the latest)
+  for (let i = res.data.length - 1; i >= 0; i--) {
+    const e = res.data[i];
+    const tsMs = e.timestampMs ? Number(e.timestampMs) : Date.now();
+    const n = normalize(e.type, e.parsedJson as Record<string, unknown>, tsMs);
+    if (n) out.push(n);
+  }
+  return out;
+}
+
+let cursor: { txDigest: string; eventSeq: string } | null = null;
+
 async function pollOnce() {
   const res = await client.queryEvents({
     query: { MoveModule: { package: PREDICT_PACKAGE_ID, module: "oracle" } },
@@ -134,25 +159,28 @@ async function pollOnce() {
 
   for (const e of res.data) {
     const tsMs = e.timestampMs ? Number(e.timestampMs) : Date.now();
-    const normalized = normalize(e.type, e.parsedJson as Record<string, unknown>, tsMs);
+    const normalized = normalize(
+      e.type,
+      e.parsedJson as Record<string, unknown>,
+      tsMs,
+    );
     if (!normalized) continue;
-
     broadcast({ type: "event", data: normalized });
-
     if (normalized.kind === "prices") pricesCount++;
     else if (normalized.kind === "svi") sviCount++;
     else if (normalized.kind === "activated") activatedCount++;
     else if (normalized.kind === "settled") settledCount++;
   }
 
-  // Compact poll-summary line
   const parts: string[] = [];
-  if (pricesCount > 0) parts.push(`${pricesCount} prices`);
-  if (sviCount > 0) parts.push(`${sviCount} svi`);
-  if (activatedCount > 0) parts.push(`${activatedCount} activated`);
-  if (settledCount > 0) parts.push(`${settledCount} settled`);
+  if (pricesCount) parts.push(`${pricesCount} prices`);
+  if (sviCount) parts.push(`${sviCount} svi`);
+  if (activatedCount) parts.push(`${activatedCount} activated`);
+  if (settledCount) parts.push(`${settledCount} settled`);
   if (parts.length > 0) {
-    console.log(`[poll] ${parts.join(", ")}  → broadcast to ${clients.size} client(s)`);
+    console.log(
+      `[poll] ${parts.join(", ")}  → broadcast to ${clients.size} client(s)`,
+    );
   }
 
   if (res.nextCursor) cursor = res.nextCursor;
@@ -164,7 +192,20 @@ async function main() {
   console.log(`WebSocket server: ws://localhost:${WS_PORT}`);
   console.log(`Polling every ${POLL_INTERVAL_MS}ms\n`);
 
-  // Seed cursor at current head so we only forward NEW events.
+  // Backfill: load recent state for new clients so they don't start blank.
+  // We want activations (for expiry), latest SVI, latest prices.
+  console.log("Backfilling recent state…");
+  const [activations, svis, prices] = await Promise.all([
+    fetchRecent("OracleActivated", 50),
+    fetchRecent("OracleSVIUpdated", 50),
+    fetchRecent("OraclePricesUpdated", 50),
+  ]);
+  backfill = [...activations, ...svis, ...prices];
+  console.log(
+    `Backfill ready: ${activations.length} activated, ${svis.length} svi, ${prices.length} prices\n`,
+  );
+
+  // Seed cursor at head so we only forward NEW events from here on.
   const seed = await client.queryEvents({
     query: { MoveModule: { package: PREDICT_PACKAGE_ID, module: "oracle" } },
     limit: 1,
@@ -187,6 +228,3 @@ main().catch((err) => {
   console.error("Startup error:", err);
   process.exit(1);
 });
-
-// Suppress unused-var lint on shortenId — keep it for future debugging.
-void shortenId;

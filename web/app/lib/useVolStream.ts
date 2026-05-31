@@ -40,16 +40,40 @@ type Status = "connecting" | "open" | "closed";
 
 export type SpotPoint = { ts: number; spot: number };
 
+export type OracleState = {
+  oracleId: string;
+  spot?: number;
+  forward?: number;
+  expiryMs?: number;
+  svi?: {
+    a: number;
+    b: number;
+    m: number;
+    rho: number;
+    sigma: number;
+  };
+  lastTs: number;
+};
+
 const MAX_RECENT = 100;
-const MAX_SPOT_POINTS = 120; // ~6 minutes at one point every 3s
+const MAX_SPOT_POINTS = 120;
+
+// SVI params come scaled. Empirically from the events you saw, they look like
+// fixed-point with ~9 decimals for the absolute params (a, b, m, sigma) and
+// ~9 decimals for rho. We normalize to floats here.
+const SCALE = 1e9;
+
+function signedToFloat(s: { is_negative: boolean; magnitude: string }) {
+  const v = Number(s.magnitude) / SCALE;
+  return s.is_negative ? -v : v;
+}
 
 export function useVolStream() {
   const [status, setStatus] = useState<Status>("connecting");
   const [recent, setRecent] = useState<VolEvent[]>([]);
   const [latestSpot, setLatestSpot] = useState<number | null>(null);
-  const [oracleCount, setOracleCount] = useState(0);
   const [spotHistory, setSpotHistory] = useState<SpotPoint[]>([]);
-  const seenOracles = useRef(new Set<string>());
+  const [oracles, setOracles] = useState<Record<string, OracleState>>({});
   const lastSpotTsRef = useRef<number>(0);
 
   useEffect(() => {
@@ -65,14 +89,34 @@ export function useVolStream() {
         if (parsed.type !== "event") return;
         const e: VolEvent = parsed.data;
 
-        seenOracles.current.add(e.oracleId);
-        setOracleCount(seenOracles.current.size);
+        // Update per-oracle state
+        setOracles((prev) => {
+          const cur = prev[e.oracleId] ?? {
+            oracleId: e.oracleId,
+            lastTs: 0,
+          };
+          const next: OracleState = { ...cur, lastTs: e.ts };
+          if (e.kind === "prices") {
+            next.spot = e.spot;
+            next.forward = e.forward;
+          } else if (e.kind === "svi") {
+            next.svi = {
+              a: Number(e.a) / SCALE,
+              b: Number(e.b) / SCALE,
+              m: signedToFloat(e.m),
+              rho: signedToFloat(e.rho),
+              sigma: Number(e.sigma) / SCALE,
+            };
+          } else if (e.kind === "activated") {
+            next.expiryMs = e.expiryMs;
+          } else if (e.kind === "settled") {
+            next.expiryMs = e.expiryMs;
+          }
+          return { ...prev, [e.oracleId]: next };
+        });
 
         if (e.kind === "prices") {
           setLatestSpot(e.spot);
-          // Sample at most once per second to keep the chart smooth.
-          // All oracles emit the same spot in the same batch, so we only
-          // need one point per timestamp.
           if (e.ts > lastSpotTsRef.current + 900) {
             lastSpotTsRef.current = e.ts;
             setSpotHistory((prev) => {
@@ -96,5 +140,12 @@ export function useVolStream() {
     return () => ws.close();
   }, []);
 
-  return { status, recent, latestSpot, oracleCount, spotHistory };
+  return {
+    status,
+    recent,
+    latestSpot,
+    spotHistory,
+    oracles,
+    oracleCount: Object.keys(oracles).length,
+  };
 }
