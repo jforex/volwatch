@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { useVolStream, OracleState } from "../lib/useVolStream";
 import { formatTime, formatUSD, shortId } from "../lib/format";
 import { SpotSparkline } from "../components/SpotSparkline";
@@ -8,10 +11,9 @@ import { OracleList } from "../components/OracleList";
 import { PLPDashboard } from "../components/PLPDashboard";
 import { ArbCheck } from "../components/ArbCheck";
 import { SurfaceExplainer } from "../components/SurfaceExplainer";
+import { VitalsStrip } from "../components/VitalsStrip";
 
-function nearestActiveOracle(
-  oracles: Record<string, OracleState>,
-): OracleState | null {
+function nearestActiveOracle(oracles: Record<string, OracleState>): OracleState | null {
   const candidates = Object.values(oracles).filter(
     (o) => o.svi && o.forward && o.expiryMs && o.expiryMs > Date.now(),
   );
@@ -21,9 +23,7 @@ function nearestActiveOracle(
 }
 
 export default function Home() {
-  const { status, recent, latestSpot, oracleCount, spotHistory, oracles, vault } =
-    useVolStream();
-
+  const { status, recent, latestSpot, oracleCount, spotHistory, oracles, vault } = useVolStream();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,52 +44,39 @@ export default function Home() {
   }, [oracles, selectedId]);
 
   return (
-    <main className="min-h-screen bg-black px-6 py-8 text-neutral-200">
-      <header className="mx-auto flex max-w-7xl items-center justify-between border-b border-neutral-900 pb-4">
-        <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="VolWatch" className="h-8 w-8 object-contain" />
-          <span className="font-mono text-lg font-bold tracking-tight text-neutral-100">
-            VolWatch
-          </span>
-          <span className="hidden sm:inline text-xs uppercase tracking-widest text-neutral-600">
-            DeepBook Predict · testnet
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-xs">
-          <span
-            className={`inline-block h-2 w-2 rounded-full ${
-              status === "open"
-                ? "bg-emerald-500 animate-pulse"
-                : status === "connecting"
-                ? "bg-amber-500"
-                : "bg-red-500"
-            }`}
-          />
-          <span className="text-neutral-400">
-            {status === "open"
-              ? "Live"
-              : status === "connecting"
-              ? "Connecting…"
-              : "Disconnected"}
+    <main className="min-h-screen bg-neutral-50 px-6 py-8 text-neutral-900">
+      <header className="mx-auto flex max-w-7xl items-center justify-between border-b border-neutral-200 pb-4">
+        <Link href="/" className="flex items-center gap-3">
+          <Image src="/logo.png" alt="VolWatch" width={36} height={36} className="object-contain" />
+          <span className="font-mono text-xl font-bold tracking-tight">VolWatch</span>
+          <span className="hidden sm:inline text-sm uppercase tracking-widest text-neutral-500 font-semibold">DeepBook Predict · testnet</span>
+        </Link>
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <span className={`inline-block h-2.5 w-2.5 rounded-full ${
+            status === "open" ? "bg-emerald-500 animate-pulse"
+            : status === "connecting" ? "bg-amber-500"
+            : "bg-red-500"
+          }`} />
+          <span className="text-neutral-700">
+            {status === "open" ? "Live" : status === "connecting" ? "Connecting…" : "Disconnected"}
           </span>
         </div>
       </header>
 
-      {/* Top row */}
+      <section className="mx-auto mt-6 max-w-7xl">
+        <VitalsStrip oracles={oracles} vault={vault} />
+      </section>
+
       <section className="mx-auto mt-6 grid max-w-7xl grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2 rounded-lg border border-neutral-900 bg-neutral-950 p-5">
+        <div className="lg:col-span-2 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-xs uppercase tracking-wider text-neutral-500">
-                BTC spot
-              </p>
-              <p className="mt-2 font-mono text-3xl font-semibold text-neutral-100">
+              <p className="text-sm uppercase tracking-wider text-neutral-500 font-semibold">BTC spot</p>
+              <p className="mt-2 font-mono text-4xl font-bold text-neutral-900">
                 {latestSpot !== null ? formatUSD(latestSpot) : "—"}
               </p>
             </div>
-            <p className="text-xs text-neutral-600">
-              last {spotHistory.length} ticks
-            </p>
+            <p className="text-sm text-neutral-500">last {spotHistory.length} ticks</p>
           </div>
           <div className="mt-4">
             <SpotSparkline data={spotHistory} />
@@ -102,79 +89,49 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PLP risk */}
       <section className="mx-auto mt-6 max-w-7xl">
         <PLPDashboard vault={vault} />
       </section>
 
-      {/* Arb checker */}
       <section className="mx-auto mt-6 max-w-7xl">
         <ArbCheck oracles={oracles} />
       </section>
 
-
-      {/* Surface explainer */}
       <section className="mx-auto mt-6 max-w-7xl">
-        <SurfaceExplainer
-          oracles={oracles}
-          vault={vault}
-          latestSpot={latestSpot}
-        />
+        <SurfaceExplainer oracles={oracles} vault={vault} latestSpot={latestSpot} />
       </section>
-      
 
-      {/* Oracle list + smile */}
       <section className="mx-auto mt-6 grid max-w-7xl grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-1">
-          <OracleList
-            oracles={oracles}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
+          <OracleList oracles={oracles} selectedId={selectedId} onSelect={setSelectedId} />
         </div>
         <div className="lg:col-span-2">
           {selected ? (
             <SmileChart oracle={selected} />
           ) : (
-            <div className="flex h-64 items-center justify-center rounded-lg border border-neutral-900 bg-neutral-950 p-10 text-center text-sm text-neutral-600">
+            <div className="flex h-64 items-center justify-center rounded-xl border border-neutral-200 bg-white p-10 text-center text-base text-neutral-500 shadow-sm">
               Select an oracle from the list →
             </div>
           )}
         </div>
       </section>
 
-      {/* Live tape */}
       <section className="mx-auto mt-6 max-w-7xl">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
-            Live event tape
-          </h2>
-          <span className="text-xs text-neutral-600">
-            Newest first · last {recent.length}
-          </span>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold uppercase tracking-wider text-neutral-700">Live event tape</h2>
+          <span className="text-sm text-neutral-500">Newest first · last {recent.length}</span>
         </div>
-        <div className="overflow-hidden rounded-lg border border-neutral-900 bg-neutral-950">
+        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
           {recent.length === 0 ? (
-            <div className="p-8 text-center text-sm text-neutral-600">
-              Waiting for events…
-            </div>
+            <div className="p-8 text-center text-base text-neutral-500">Waiting for events…</div>
           ) : (
-            <ul className="divide-y divide-neutral-900 font-mono text-xs">
+            <ul className="divide-y divide-neutral-200 font-mono text-sm">
               {recent.slice(0, 30).map((e, i) => (
-                <li
-                  key={i}
-                  className="flex items-center gap-3 px-4 py-2 hover:bg-neutral-900/50"
-                >
-                  <span className="w-20 text-neutral-600">
-                    {formatTime(e.ts)}
-                  </span>
+                <li key={i} className="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50">
+                  <span className="w-20 text-neutral-500">{formatTime(e.ts)}</span>
                   <EventBadge kind={e.kind} />
-                  <span className="text-neutral-500">
-                    {shortId(e.oracleId)}
-                  </span>
-                  <span className="ml-auto text-neutral-200">
-                    {renderDetail(e)}
-                  </span>
+                  <span className="text-neutral-600">{shortId(e.oracleId)}</span>
+                  <span className="ml-auto text-neutral-900 font-semibold">{renderDetail(e)}</span>
                 </li>
               ))}
             </ul>
@@ -187,30 +144,22 @@ export default function Home() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-neutral-900 bg-neutral-950 p-4">
-      <p className="text-xs uppercase tracking-wider text-neutral-500">
-        {label}
-      </p>
-      <p className="mt-2 font-mono text-2xl font-semibold text-neutral-100">
-        {value}
-      </p>
+    <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <p className="text-sm uppercase tracking-wider text-neutral-500 font-semibold">{label}</p>
+      <p className="mt-2 font-mono text-3xl font-bold text-neutral-900">{value}</p>
     </div>
   );
 }
 
 function EventBadge({ kind }: { kind: string }) {
   const styles: Record<string, string> = {
-    prices: "bg-sky-950 text-sky-400 border-sky-900/60",
-    svi: "bg-amber-950 text-amber-400 border-amber-900/60",
-    activated: "bg-emerald-950 text-emerald-400 border-emerald-900/60",
-    settled: "bg-neutral-800 text-neutral-400 border-neutral-700",
+    prices: "bg-sky-50 text-sky-700 border-sky-200",
+    svi: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    activated: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    settled: "bg-neutral-100 text-neutral-700 border-neutral-300",
   };
   return (
-    <span
-      className={`w-20 rounded border px-1.5 py-0.5 text-center text-[10px] uppercase tracking-wider ${
-        styles[kind] ?? styles.settled
-      }`}
-    >
+    <span className={`w-20 rounded border px-1.5 py-0.5 text-center text-[11px] font-bold uppercase tracking-wider ${styles[kind] ?? styles.settled}`}>
       {kind}
     </span>
   );
@@ -218,32 +167,16 @@ function EventBadge({ kind }: { kind: string }) {
 
 function renderDetail(e: ReturnType<typeof useVolStream>["recent"][number]) {
   if (e.kind === "prices") {
-    return (
-      <span>
-        spot <span className="text-amber-400">{formatUSD(e.spot)}</span>
-      </span>
-    );
+    return <span>spot <span className="text-indigo-700">{formatUSD(e.spot)}</span></span>;
   }
   if (e.kind === "svi") {
-    return (
-      <span className="text-neutral-500">
-        a={e.a} b={e.b} σ={e.sigma}
-      </span>
-    );
+    return <span className="text-neutral-500">a={e.a} b={e.b} σ={e.sigma}</span>;
   }
   if (e.kind === "activated") {
-    return (
-      <span className="text-emerald-400">
-        expiry {new Date(e.expiryMs).toLocaleTimeString()}
-      </span>
-    );
+    return <span className="text-emerald-700">expiry {new Date(e.expiryMs).toLocaleTimeString()}</span>;
   }
   if (e.kind === "settled") {
-    return (
-      <span className="text-neutral-400">
-        settled {formatUSD(e.settlementPrice)}
-      </span>
-    );
+    return <span className="text-neutral-700">settled {formatUSD(e.settlementPrice)}</span>;
   }
   return null;
 }
