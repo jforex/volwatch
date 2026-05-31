@@ -38,14 +38,19 @@ export type VolEvent =
 
 type Status = "connecting" | "open" | "closed";
 
+export type SpotPoint = { ts: number; spot: number };
+
 const MAX_RECENT = 100;
+const MAX_SPOT_POINTS = 120; // ~6 minutes at one point every 3s
 
 export function useVolStream() {
   const [status, setStatus] = useState<Status>("connecting");
   const [recent, setRecent] = useState<VolEvent[]>([]);
   const [latestSpot, setLatestSpot] = useState<number | null>(null);
   const [oracleCount, setOracleCount] = useState(0);
+  const [spotHistory, setSpotHistory] = useState<SpotPoint[]>([]);
   const seenOracles = useRef(new Set<string>());
+  const lastSpotTsRef = useRef<number>(0);
 
   useEffect(() => {
     const ws = new WebSocket(WS_URL);
@@ -63,19 +68,33 @@ export function useVolStream() {
         seenOracles.current.add(e.oracleId);
         setOracleCount(seenOracles.current.size);
 
-        if (e.kind === "prices") setLatestSpot(e.spot);
+        if (e.kind === "prices") {
+          setLatestSpot(e.spot);
+          // Sample at most once per second to keep the chart smooth.
+          // All oracles emit the same spot in the same batch, so we only
+          // need one point per timestamp.
+          if (e.ts > lastSpotTsRef.current + 900) {
+            lastSpotTsRef.current = e.ts;
+            setSpotHistory((prev) => {
+              const next = [...prev, { ts: e.ts, spot: e.spot }];
+              return next.length > MAX_SPOT_POINTS
+                ? next.slice(next.length - MAX_SPOT_POINTS)
+                : next;
+            });
+          }
+        }
 
         setRecent((prev) => {
           const next = [e, ...prev];
           return next.length > MAX_RECENT ? next.slice(0, MAX_RECENT) : next;
         });
       } catch {
-        /* ignore parse errors */
+        /* ignore */
       }
     };
 
     return () => ws.close();
   }, []);
 
-  return { status, recent, latestSpot, oracleCount };
+  return { status, recent, latestSpot, oracleCount, spotHistory };
 }

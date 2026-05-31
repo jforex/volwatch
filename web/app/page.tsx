@@ -2,13 +2,14 @@
 
 import { useVolStream } from "./lib/useVolStream";
 import { formatTime, formatUSD, shortId } from "./lib/format";
+import { SpotSparkline } from "./components/SpotSparkline";
 
 export default function Home() {
-  const { status, recent, latestSpot, oracleCount } = useVolStream();
+  const { status, recent, latestSpot, oracleCount, spotHistory } =
+    useVolStream();
 
   return (
     <main className="min-h-screen bg-black px-6 py-8 text-neutral-200">
-      {/* Header */}
       <header className="mx-auto flex max-w-6xl items-center justify-between border-b border-neutral-900 pb-4">
         <div className="flex items-center gap-3">
           <span className="font-mono text-lg font-semibold tracking-tight text-amber-400">
@@ -38,14 +39,32 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Stats strip */}
-      <section className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-4 sm:grid-cols-3">
-        <Stat
-          label="BTC spot"
-          value={latestSpot !== null ? formatUSD(latestSpot) : "—"}
-        />
-        <Stat label="Active oracles" value={String(oracleCount)} />
-        <Stat label="Events in buffer" value={String(recent.length)} />
+      {/* Top row: BTC spot (with sparkline) + small stats */}
+      <section className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Spot card spans 2 columns, contains the chart */}
+        <div className="lg:col-span-2 rounded-lg border border-neutral-900 bg-neutral-950 p-5">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-neutral-500">
+                BTC spot
+              </p>
+              <p className="mt-2 font-mono text-3xl font-semibold text-neutral-100">
+                {latestSpot !== null ? formatUSD(latestSpot) : "—"}
+              </p>
+            </div>
+            <p className="text-xs text-neutral-600">
+              last {spotHistory.length} ticks
+            </p>
+          </div>
+          <div className="mt-4">
+            <SpotSparkline data={spotHistory} />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <Stat label="Active oracles" value={String(oracleCount)} />
+          <Stat label="Events in buffer" value={String(recent.length)} />
+        </div>
       </section>
 
       {/* Live tape */}
