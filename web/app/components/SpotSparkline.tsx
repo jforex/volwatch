@@ -36,7 +36,7 @@ export function SpotSparkline({ data }: { data: SpotPoint[] }) {
             }}
             labelStyle={{ color: "#525252", fontWeight: 600 }}
             labelFormatter={(ts) => formatTime(Number(ts))}
-            formatter={(value: number) => [formatUSD(value), "spot"]}
+            formatter={(value) => [formatUSD(Number(value)), "spot"]}
           />
           <Line type="monotone" dataKey="spot" stroke={color} strokeWidth={2} dot={false} isAnimationActive={false} />
         </LineChart>
