@@ -32,7 +32,14 @@ export function impliedVol(
   return Math.sqrt(w);
 }
 
-/** Years between now and an expiry timestamp (ms). Still useful for display. */
+/** ATM implied vol — IV at forward (k=0). */
+export function atmIV(params: SVIParams): number {
+  const w = totalVariance(params, 0);
+  if (w <= 0) return NaN;
+  return Math.sqrt(w);
+}
+
+/** Years between now and an expiry timestamp (ms). */
 export function timeToExpiry(expiryMs: number, nowMs = Date.now()): number {
   const seconds = (expiryMs - nowMs) / 1000;
   return seconds / (365 * 24 * 3600);
@@ -45,7 +52,7 @@ export function smileCurve(
   opts: { points?: number; widthPct?: number } = {},
 ) {
   const points = opts.points ?? 41;
-  const widthPct = opts.widthPct ?? 0.08;
+  const widthPct = opts.widthPct ?? 0.25;
   const min = forward * (1 - widthPct);
   const max = forward * (1 + widthPct);
   const step = (max - min) / (points - 1);

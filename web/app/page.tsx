@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useVolStream, OracleState } from "./lib/useVolStream";
 import { formatTime, formatUSD, shortId } from "./lib/format";
 import { SpotSparkline } from "./components/SpotSparkline";
 import { SmileChart } from "./components/SmileChart";
+import { OracleList } from "./components/OracleList";
 
-function pickFeaturedOracle(
+function nearestActiveOracle(
   oracles: Record<string, OracleState>,
 ): OracleState | null {
   const candidates = Object.values(oracles).filter(
@@ -14,10 +15,9 @@ function pickFeaturedOracle(
       o.svi &&
       o.forward &&
       o.expiryMs &&
-      o.expiryMs > Date.now(), // not expired
+      o.expiryMs > Date.now(),
   );
   if (candidates.length === 0) return null;
-  // Nearest-expiry first — most actively-priced smile
   candidates.sort((a, b) => (a.expiryMs ?? 0) - (b.expiryMs ?? 0));
   return candidates[0];
 }
@@ -26,11 +26,30 @@ export default function Home() {
   const { status, recent, latestSpot, oracleCount, spotHistory, oracles } =
     useVolStream();
 
-  const featured = useMemo(() => pickFeaturedOracle(oracles), [oracles]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Auto-select the nearest active oracle if nothing is selected,
+  // or if the previously selected one expired / vanished.
+  useEffect(() => {
+    const stillValid =
+      selectedId &&
+      oracles[selectedId] &&
+      oracles[selectedId].expiryMs &&
+      (oracles[selectedId].expiryMs as number) > Date.now();
+    if (!stillValid) {
+      const fallback = nearestActiveOracle(oracles);
+      if (fallback) setSelectedId(fallback.oracleId);
+    }
+  }, [oracles, selectedId]);
+
+  const selected = useMemo(() => {
+    if (!selectedId) return null;
+    return oracles[selectedId] ?? null;
+  }, [oracles, selectedId]);
 
   return (
     <main className="min-h-screen bg-black px-6 py-8 text-neutral-200">
-      <header className="mx-auto flex max-w-6xl items-center justify-between border-b border-neutral-900 pb-4">
+      <header className="mx-auto flex max-w-7xl items-center justify-between border-b border-neutral-900 pb-4">
         <div className="flex items-center gap-3">
           <span className="font-mono text-lg font-semibold tracking-tight text-amber-400">
             VolWatch
@@ -59,8 +78,8 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Top row: spot card + small stats */}
-      <section className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-4 lg:grid-cols-3">
+      {/* Top row: spot card + stats */}
+      <section className="mx-auto mt-6 grid max-w-7xl grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2 rounded-lg border border-neutral-900 bg-neutral-950 p-5">
           <div className="flex items-end justify-between">
             <div>
@@ -86,19 +105,28 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Smile chart — the money chart */}
-      <section className="mx-auto mt-6 max-w-6xl">
-        {featured ? (
-          <SmileChart oracle={featured} />
-        ) : (
-          <div className="rounded-lg border border-neutral-900 bg-neutral-950 p-10 text-center text-sm text-neutral-600">
-            Waiting for full oracle state (SVI + forward + expiry)…
-          </div>
-        )}
+      {/* Middle row: oracle list (left) + smile chart (right) */}
+      <section className="mx-auto mt-6 grid max-w-7xl grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-1">
+          <OracleList
+            oracles={oracles}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+        </div>
+        <div className="lg:col-span-2">
+          {selected ? (
+            <SmileChart oracle={selected} />
+          ) : (
+            <div className="flex h-64 items-center justify-center rounded-lg border border-neutral-900 bg-neutral-950 p-10 text-center text-sm text-neutral-600">
+              Select an oracle from the list →
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Live tape */}
-      <section className="mx-auto mt-6 max-w-6xl">
+      <section className="mx-auto mt-6 max-w-7xl">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
             Live event tape
