@@ -11,7 +11,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { OracleState } from "../lib/useVolStream";
-import { smileCurve, timeToExpiry } from "../lib/svi";
+import { smileCurve } from "../lib/svi";
 import { formatUSD, shortId } from "../lib/format";
 
 export function SmileChart({ oracle }: { oracle: OracleState }) {
@@ -23,8 +23,7 @@ export function SmileChart({ oracle }: { oracle: OracleState }) {
     );
   }
 
-  const T = timeToExpiry(oracle.expiryMs);
-  if (T <= 0) {
+  if (oracle.expiryMs <= Date.now()) {
     return (
       <div className="flex h-64 items-center justify-center text-xs text-neutral-600">
         Oracle expired
@@ -32,7 +31,7 @@ export function SmileChart({ oracle }: { oracle: OracleState }) {
     );
   }
 
-  const curve = smileCurve(oracle.svi, oracle.forward, T);
+  const curve = smileCurve(oracle.svi, oracle.forward, { widthPct: 0.25 });
   const expiryDate = new Date(oracle.expiryMs);
   const minsToExpiry = Math.round((oracle.expiryMs - Date.now()) / 60000);
 
@@ -122,7 +121,6 @@ export function SmileChart({ oracle }: { oracle: OracleState }) {
         </ResponsiveContainer>
       </div>
 
-      {/* SVI params readout */}
       <div className="mt-4 grid grid-cols-5 gap-2 border-t border-neutral-900 pt-3 font-mono text-[10px] text-neutral-500">
         <ParamCell label="a" value={oracle.svi.a.toFixed(4)} />
         <ParamCell label="b" value={oracle.svi.b.toFixed(4)} />

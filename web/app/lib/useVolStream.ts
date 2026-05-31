@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8080";
 
@@ -58,13 +58,18 @@ export type OracleState = {
 const MAX_RECENT = 100;
 const MAX_SPOT_POINTS = 120;
 
-// SVI params come scaled. Empirically from the events you saw, they look like
-// fixed-point with ~9 decimals for the absolute params (a, b, m, sigma) and
-// ~9 decimals for rho. We normalize to floats here.
-const SCALE = 1e9;
+// SVI fixed-point scales differ per parameter.
+// Empirically, a/b/m/sigma look like 1e6-scaled, rho like 1e9-scaled.
+// Reference event: a=7112, b=549259, m=1097485, sigma=1056137 → 0.007, 0.55, 0.001, 1.06
+// rho=419465799 → 0.42 (correlation, must be in [-1, 1])
+const SCALE_AB_M_SIGMA = 1e6;
+const SCALE_RHO = 1e9;
 
-function signedToFloat(s: { is_negative: boolean; magnitude: string }) {
-  const v = Number(s.magnitude) / SCALE;
+function signedToFloat(
+  s: { is_negative: boolean; magnitude: string },
+  scale: number,
+) {
+  const v = Number(s.magnitude) / scale;
   return s.is_negative ? -v : v;
 }
 
@@ -89,7 +94,6 @@ export function useVolStream() {
         if (parsed.type !== "event") return;
         const e: VolEvent = parsed.data;
 
-        // Update per-oracle state
         setOracles((prev) => {
           const cur = prev[e.oracleId] ?? {
             oracleId: e.oracleId,
@@ -101,11 +105,11 @@ export function useVolStream() {
             next.forward = e.forward;
           } else if (e.kind === "svi") {
             next.svi = {
-              a: Number(e.a) / SCALE,
-              b: Number(e.b) / SCALE,
-              m: signedToFloat(e.m),
-              rho: signedToFloat(e.rho),
-              sigma: Number(e.sigma) / SCALE,
+              a: Number(e.a) / SCALE_AB_M_SIGMA,
+              b: Number(e.b) / SCALE_AB_M_SIGMA,
+              m: signedToFloat(e.m, SCALE_AB_M_SIGMA),
+              rho: signedToFloat(e.rho, SCALE_RHO),
+              sigma: Number(e.sigma) / SCALE_AB_M_SIGMA,
             };
           } else if (e.kind === "activated") {
             next.expiryMs = e.expiryMs;
@@ -140,12 +144,20 @@ export function useVolStream() {
     return () => ws.close();
   }, []);
 
+  // Only count oracles whose expiry is still in the future.
+  const activeOracleCount = useMemo(() => {
+    const now = Date.now();
+    return Object.values(oracles).filter(
+      (o) => o.expiryMs !== undefined && o.expiryMs > now,
+    ).length;
+  }, [oracles]);
+
   return {
     status,
     recent,
     latestSpot,
     spotHistory,
     oracles,
-    oracleCount: Object.keys(oracles).length,
+    oracleCount: activeOracleCount,
   };
 }
