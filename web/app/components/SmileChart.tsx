@@ -49,7 +49,7 @@ export function SmileChart({ oracle }: { oracle: OracleState }) {
               contentStyle={{ background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: 8, fontSize: 13, fontFamily: "monospace", color: "#171717", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
               labelStyle={{ color: "#525252", fontWeight: 600 }}
               labelFormatter={(v) => `Strike ${formatUSD(Number(v))}`}
-              formatter={(value: number) => [`${value.toFixed(2)}%`, "Implied vol"]}
+              formatter={(value) => [`${Number(value).toFixed(2)}%`, "Implied vol"]}
             />
             <ReferenceLine x={oracle.forward} stroke="#4f46e5" strokeDasharray="3 3" strokeWidth={1.5} label={{ value: "ATM", position: "top", fill: "#4f46e5", fontSize: 12, fontFamily: "monospace", fontWeight: "bold" }} />
             <Line type="monotone" dataKey="ivPct" stroke="#4f46e5" strokeWidth={2.5} dot={false} isAnimationActive={false} />
