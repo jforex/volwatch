@@ -1,7 +1,7 @@
 "use client";
 
 import { ResponsiveContainer, LineChart, Line, YAxis, XAxis, Tooltip } from "recharts";
-import { SpotPoint } from "../lib/useVolStream";
+type SpotPoint = { ts: number; spot: number };
 import { formatTime, formatUSD } from "../lib/format";
 
 export function SpotSparkline({ data }: { data: SpotPoint[] }) {
