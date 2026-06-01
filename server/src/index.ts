@@ -40,16 +40,47 @@ const clients = new Set<WebSocket>();
 let backfill: NormalizedEvent[] = [];
 let latestVault: VaultSnapshot | null = null;
 
+// Time-travel: rolling snapshot history of oracle state + vault, last 30 min, sampled every 5s
+type OracleSnapshot = {
+  oracleId: string;
+  expiryMs?: number;
+  forward?: number;
+  svi?: {
+    a: string;
+    b: string;
+    m: { is_negative: boolean; magnitude: string };
+    rho: { is_negative: boolean; magnitude: string };
+    sigma: string;
+  };
+};
+type HistoryFrame = {
+  ts: number;
+  oracles: OracleSnapshot[];
+  vault: VaultSnapshot | null;
+};
+const HISTORY_WINDOW_MS = 30 * 60 * 1000; // 30 min
+const HISTORY_SAMPLE_MS = 5_000; // sample every 5s
+let history: HistoryFrame[] = [];
+// Server-side oracle state (mirrors what the frontend builds, used to capture snapshots)
+const serverOracles: Record<string, OracleSnapshot> = {};
+
+
 wss.on("connection", (ws) => {
   clients.add(ws);
   console.log(`[ws] client connected (${clients.size} total)`);
-  ws.send(JSON.stringify({ type: "hello", at: Date.now() }));
+
+ws.send(JSON.stringify({ type: "hello", at: Date.now() }));
   for (const evt of backfill) {
     ws.send(JSON.stringify({ type: "event", data: evt }));
   }
   if (latestVault) {
     ws.send(JSON.stringify({ type: "vault", data: latestVault }));
   }
+  // Time-travel: send history buffer so client can scrub backwards
+  if (history.length > 0) {
+    ws.send(JSON.stringify({ type: "history", data: history }));
+  }
+
   ws.on("close", () => {
     clients.delete(ws);
     console.log(`[ws] client disconnected (${clients.size} total)`);
@@ -259,10 +290,31 @@ async function pollEvents() {
     );
     if (!normalized) continue;
     broadcast({ type: "event", data: normalized });
-    if (normalized.kind === "prices") pricesCount++;
+
+if (normalized.kind === "prices") pricesCount++;
     else if (normalized.kind === "svi") sviCount++;
     else if (normalized.kind === "activated") activatedCount++;
     else if (normalized.kind === "settled") settledCount++;
+    // Mirror oracle state server-side for snapshot capture
+    if (normalized.kind === "prices") {
+      const o = serverOracles[normalized.oracleId] ?? { oracleId: normalized.oracleId };
+      o.forward = normalized.forward;
+      serverOracles[normalized.oracleId] = o;
+    } else if (normalized.kind === "svi") {
+      const o = serverOracles[normalized.oracleId] ?? { oracleId: normalized.oracleId };
+      o.svi = {
+        a: normalized.a,
+        b: normalized.b,
+        m: normalized.m,
+        rho: normalized.rho,
+        sigma: normalized.sigma,
+      };
+      serverOracles[normalized.oracleId] = o;
+    } else if (normalized.kind === "activated") {
+      const o = serverOracles[normalized.oracleId] ?? { oracleId: normalized.oracleId };
+      o.expiryMs = normalized.expiryMs;
+      serverOracles[normalized.oracleId] = o;
+    }
   }
 
   const parts: string[] = [];
@@ -331,6 +383,24 @@ async function main() {
       );
     }
   }, VAULT_POLL_INTERVAL_MS);
+
+  // Time-travel: capture a snapshot every 5s, trim to 30 min window
+  setInterval(() => {
+    const now = Date.now();
+    const frame: HistoryFrame = {
+      ts: now,
+      oracles: Object.values(serverOracles).map((o) => ({ ...o })),
+      vault: latestVault ? { ...latestVault } : null,
+    };
+    history.push(frame);
+    const cutoff = now - HISTORY_WINDOW_MS;
+    while (history.length > 0 && history[0].ts < cutoff) {
+      history.shift();
+    }
+    // Broadcast latest frame so connected clients get rolling updates
+    broadcast({ type: "history-frame", data: frame });
+  }, HISTORY_SAMPLE_MS);
+  
 
   httpServer.listen(WS_PORT, "0.0.0.0", () => {
     console.log(`VolWatch server listening on 0.0.0.0:${WS_PORT}`);

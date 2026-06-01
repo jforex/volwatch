@@ -1,5 +1,6 @@
 "use client";
 
+import { TimeTravel } from "../components/TimeTravel";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -23,7 +24,7 @@ function nearestActiveOracle(oracles: Record<string, OracleState>): OracleState 
 }
 
 export default function Home() {
-  const { status, recent, latestSpot, oracleCount, spotHistory, oracles, vault } = useVolStream();
+  const { status, recent, latestSpot, oracleCount, spotHistory, oracles, vault, scrubTs, setScrubTs, scrubRange, isScrubbing, goLive } = useVolStream();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -62,6 +63,16 @@ export default function Home() {
           </span>
         </div>
       </header>
+
+      <section className="mx-auto mt-5 sm:mt-6 max-w-7xl">
+        <TimeTravel
+          scrubTs={scrubTs}
+          setScrubTs={setScrubTs}
+          scrubRange={scrubRange}
+          isScrubbing={isScrubbing}
+          goLive={goLive}
+        />
+      </section>
 
       <section className="mx-auto mt-5 sm:mt-6 max-w-7xl">
         <VitalsStrip oracles={oracles} vault={vault} />
