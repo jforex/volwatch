@@ -1,5 +1,6 @@
 import { SuiJsonRpcClient, getJsonRpcFullnodeUrl } from "@mysten/sui/jsonRpc";
 import { WebSocketServer, WebSocket } from "ws";
+import { createServer } from "http";
 import "dotenv/config";
 
 const PREDICT_PACKAGE_ID =
@@ -9,7 +10,7 @@ const PREDICT_OBJECT_ID =
 
 const POLL_INTERVAL_MS = 3000;
 const VAULT_POLL_INTERVAL_MS = 10_000;
-const WS_PORT = Number(process.env.WS_PORT ?? 8080);
+const WS_PORT = Number(process.env.PORT ?? process.env.WS_PORT ?? 8080);
 
 // dUSDC has 6 decimals
 const QUOTE_DECIMALS = 1e6;
@@ -23,7 +24,17 @@ const client = new SuiJsonRpcClient({
   network: "testnet",
 });
 
-const wss = new WebSocketServer({ port: WS_PORT });
+const httpServer = createServer((req, res) => {
+  if (req.url === "/" || req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("VolWatch server live");
+    return;
+  }
+  res.writeHead(404);
+  res.end();
+});
+
+const wss = new WebSocketServer({ server: httpServer });
 const clients = new Set<WebSocket>();
 
 let backfill: NormalizedEvent[] = [];
@@ -87,14 +98,14 @@ type NormalizedEvent =
 
 export type VaultSnapshot = {
   ts: number;
-  vaultBalance: number; // USD
-  plpSupply: number; // shares
-  pricePerShare: number; // USD per share
-  totalMaxPayout: number; // USD
-  totalMTM: number; // USD
-  utilizationPct: number; // 0–100
-  exposureCeilingPct: number; // protocol-defined cap, 0–100
-  headroomPct: number; // ceiling - utilization
+  vaultBalance: number;
+  plpSupply: number;
+  pricePerShare: number;
+  totalMaxPayout: number;
+  totalMTM: number;
+  utilizationPct: number;
+  exposureCeilingPct: number;
+  headroomPct: number;
   activeStrikeMatrices: number;
   settledOraclesCount: number;
   tradingPaused: boolean;
@@ -174,7 +185,6 @@ async function pollVault(): Promise<VaultSnapshot | null> {
       id: PREDICT_OBJECT_ID,
       options: { showContent: true },
     });
-    // Type narrowing is messy here — Sui SDK returns a complex union. Walk it.
     const content = (res as any)?.data?.content;
     if (!content || content.dataType !== "moveObject") return null;
     const f = content.fields;
@@ -273,7 +283,6 @@ async function main() {
   console.log("VolWatch backend starting…");
   console.log("Predict package:", PREDICT_PACKAGE_ID);
   console.log("Predict object:", PREDICT_OBJECT_ID);
-  console.log(`WebSocket server: ws://localhost:${WS_PORT}`);
   console.log(`Event poll: ${POLL_INTERVAL_MS}ms · Vault poll: ${VAULT_POLL_INTERVAL_MS}ms\n`);
 
   console.log("Backfilling recent state…");
@@ -322,6 +331,10 @@ async function main() {
       );
     }
   }, VAULT_POLL_INTERVAL_MS);
+
+  httpServer.listen(WS_PORT, "0.0.0.0", () => {
+    console.log(`VolWatch server listening on 0.0.0.0:${WS_PORT}`);
+  });
 }
 
 main().catch((err) => {
