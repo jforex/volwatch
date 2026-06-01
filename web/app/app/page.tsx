@@ -27,15 +27,24 @@ export default function Home() {
   const { status, recent, latestSpot, oracleCount, spotHistory, oracles, vault, scrubTs, setScrubTs, scrubRange, isScrubbing, goLive } = useVolStream();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  useEffect(() => {
+useEffect(() => {
+    // Selected oracle is valid if it exists in current (resolved) oracles AND has SVI data
+    const current = selectedId ? oracles[selectedId] : null;
     const stillValid =
-      selectedId &&
-      oracles[selectedId] &&
-      oracles[selectedId].expiryMs &&
-      (oracles[selectedId].expiryMs as number) > Date.now();
+      current &&
+      current.svi &&
+      current.forward &&
+      current.expiryMs &&
+      (current.expiryMs as number) > Date.now();
     if (!stillValid) {
-      const fallback = nearestActiveOracle(oracles);
-      if (fallback) setSelectedId(fallback.oracleId);
+      // Pick nearest oracle WITH full data (svi + forward + expiry) from the resolved frame
+      const candidates = Object.values(oracles).filter(
+        (o) => o.svi && o.forward && o.expiryMs && o.expiryMs > Date.now(),
+      );
+      if (candidates.length > 0) {
+        candidates.sort((a, b) => (a.expiryMs ?? 0) - (b.expiryMs ?? 0));
+        setSelectedId(candidates[0].oracleId);
+      }
     }
   }, [oracles, selectedId]);
 
