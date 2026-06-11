@@ -41,7 +41,6 @@ export type VaultSnapshot = {
   withdrawalLimiter: { enabled: boolean; available: number; capacity: number };
 };
 
-// Snapshot frames from server carry raw SVI (strings + signed-magnitude); we normalize on receive
 type RawSnapshotOracle = {
   oracleId: string;
   expiryMs?: number;
@@ -69,7 +68,6 @@ type RawHistoryFrame = {
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8080";
 
-// Scale factors used by Predict
 const SCALE_AB_M_SIGMA = 1e6;
 const SCALE_RHO = 1e9;
 
@@ -123,10 +121,24 @@ export function useVolStream() {
   const [history, setHistory] = useState<HistoryFrame[]>([]);
   const [scrubTs, setScrubTs] = useState<number | null>(null);
 
+  const oraclesRef = useRef<Record<string, OracleState>>({});
+  const recentRef = useRef<NormalizedEvent[]>([]);
+  const spotHistoryRef = useRef<{ ts: number; spot: number }[]>([]);
+  const dirtyRef = useRef(false);
+
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+
+    const syncInterval = setInterval(() => {
+      if (!dirtyRef.current) return;
+      dirtyRef.current = false;
+      setOracles({ ...oraclesRef.current });
+      setRecent([...recentRef.current]);
+      setSpotHistory([...spotHistoryRef.current]);
+    }, 100);
+
     function connect() {
       if (cancelled) return;
       const ws = new WebSocket(WS_URL);
@@ -168,40 +180,52 @@ export function useVolStream() {
         }
         if (parsed.type === "event") {
           const evt = parsed.data as NormalizedEvent;
-          setRecent((r) => [evt, ...r].slice(0, 100));
+
+          // TEMP DEBUG
+          if (typeof window !== "undefined") {
+            (window as any).__debugCounts = (window as any).__debugCounts ?? {};
+            (window as any).__debugCounts[evt.kind] = ((window as any).__debugCounts[evt.kind] ?? 0) + 1;
+          }
+
+          recentRef.current = [evt, ...recentRef.current].slice(0, 100);
+          const existing = oraclesRef.current[evt.oracleId] ?? { oracleId: evt.oracleId };
           if (evt.kind === "prices") {
             setLatestSpot(evt.spot);
-            setSpotHistory((h) => [...h, { ts: evt.ts, spot: evt.spot }].slice(-120));
-            setOracles((o) => ({
-              ...o,
-              [evt.oracleId]: {
-                ...(o[evt.oracleId] ?? { oracleId: evt.oracleId }),
-                forward: evt.forward,
-              },
-            }));
+            spotHistoryRef.current = [...spotHistoryRef.current, { ts: evt.ts, spot: evt.spot }].slice(-120);
+            oraclesRef.current = {
+              ...oraclesRef.current,
+              [evt.oracleId]: { ...existing, forward: evt.forward },
+            };
           } else if (evt.kind === "svi") {
-            setOracles((o) => ({
-              ...o,
+            const normalizedSvi = normalizeSvi({ a: evt.a, b: evt.b, m: evt.m, rho: evt.rho, sigma: evt.sigma });
+            // TEMP DEBUG
+            if (typeof window !== "undefined") {
+              (window as any).__debugSviSample = normalizedSvi;
+              (window as any).__debugSviRawSample = { a: evt.a, b: evt.b, m: evt.m, rho: evt.rho, sigma: evt.sigma };
+              (window as any).__debugOraclesWithSvi = ((window as any).__debugOraclesWithSvi ?? new Set());
+              (window as any).__debugOraclesWithSvi.add(evt.oracleId);
+            }
+            oraclesRef.current = {
+              ...oraclesRef.current,
               [evt.oracleId]: {
-                ...(o[evt.oracleId] ?? { oracleId: evt.oracleId }),
-                svi: normalizeSvi({ a: evt.a, b: evt.b, m: evt.m, rho: evt.rho, sigma: evt.sigma }),
+                ...existing,
+                svi: normalizedSvi,
               },
-            }));
+            };
           } else if (evt.kind === "activated") {
-            setOracles((o) => ({
-              ...o,
-              [evt.oracleId]: {
-                ...(o[evt.oracleId] ?? { oracleId: evt.oracleId }),
-                expiryMs: evt.expiryMs,
-              },
-            }));
+            oraclesRef.current = {
+              ...oraclesRef.current,
+              [evt.oracleId]: { ...existing, expiryMs: evt.expiryMs },
+            };
           }
+          dirtyRef.current = true;
         }
       };
     }
     connect();
     return () => {
       cancelled = true;
+      clearInterval(syncInterval);
       wsRef.current?.close();
     };
   }, []);
