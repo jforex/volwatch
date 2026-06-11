@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 
 export default function Landing() {
   return (
@@ -7,7 +11,7 @@ export default function Landing() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 sm:py-6">
         <div className="flex items-center gap-2 sm:gap-3">
           <Image src="/logo.png" alt="VWATCH" width={36} height={36} className="object-contain sm:h-11 sm:w-11 rounded" />
-            <span className="font-[family-name:var(--font-space-grotesk)] text-lg sm:text-xl font-bold tracking-tight">VWATCH</span>
+          <span className="font-[family-name:var(--font-space-grotesk)] text-lg sm:text-xl font-bold tracking-tight">VWATCH</span>
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
           <a href="https://github.com/jforex/volwatch" target="_blank" rel="noreferrer" className="hidden sm:inline text-base font-medium text-neutral-600 hover:text-neutral-900 transition-colors">GitHub</a>
@@ -18,9 +22,8 @@ export default function Landing() {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 pb-16 sm:pb-24 pt-8 sm:pt-16 lg:pt-24">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16 lg:items-center">
           <div>
-
-           <h1 className="mt-6 sm:mt-8 text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
-              See risk. Find Edge. <span className="text-blue-600">Deploy.</span>
+            <h1 className="mt-6 sm:mt-8 text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
+              <TypingHeadline />
             </h1>
             <p className="mt-6 sm:mt-8 text-base sm:text-xl leading-relaxed text-neutral-600">
               VWATCH is the real-time volatility terminal for DeepBook Predict. Live smile curves, on-chain PLP vault risk, arbitrage detection, and AI-readable explanations — decoded from real Sui events.
@@ -35,10 +38,7 @@ export default function Landing() {
               <Stat label="Modules" value="3 + arb" />
             </div>
           </div>
-          <div className="relative flex items-center justify-center order-first lg:order-last">
-            <div className="absolute inset-0 bg-blue-200/40 blur-3xl rounded-full" />
-            <Image src="/logo.png" alt="VWATCH eagle" width={520} height={520} priority className="relative object-contain w-64 sm:w-96 lg:w-[520px] h-auto rounded-2xl shadow-2xl" />
-          </div>
+          <EagleHero />
         </div>
       </section>
 
@@ -96,7 +96,7 @@ export default function Landing() {
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:px-6 sm:flex-row">
           <div className="flex items-center gap-3">
             <Image src="/logo.png" alt="VWATCH" width={28} height={28} className="object-contain rounded" />
-            <span className="font-mono text-sm sm:text-base font-bold">VWATCH</span>
+            <span className="font-[family-name:var(--font-space-grotesk)] text-sm sm:text-base font-bold">VWATCH</span>
             <span className="text-xs sm:text-sm text-neutral-500">· built for Sui Overflow 2026</span>
           </div>
           <div className="flex gap-6 text-sm font-medium text-neutral-600">
@@ -106,6 +106,110 @@ export default function Landing() {
         </div>
       </footer>
     </main>
+  );
+}
+
+function TypingHeadline() {
+  const lines = [
+    "See risk. Find edge.",
+    "Deploy.",
+  ];
+  const blueLineIdx = 1;
+
+  let globalIdx = 0;
+
+  return (
+    <span aria-label="See risk. Find edge. Deploy." className="block">
+      {lines.map((line, lineIdx) => (
+        <span key={lineIdx} className={`block ${lineIdx === blueLineIdx ? "text-blue-600" : ""}`}>
+          {line.split("").map((char, charIdx) => {
+            const i = globalIdx++;
+            return (
+              <motion.span
+                key={`${lineIdx}-${charIdx}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  duration: 0.05,
+                  delay: i * 0.04,
+                  ease: "easeOut",
+                }}
+              >
+                {char === " " ? "\u00A0" : char}
+              </motion.span>
+            );
+          })}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function EagleHero() {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const targetTimeRef = useRef<number>(2.5);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const onLoaded = () => {
+      video.pause();
+      const dur = video.duration || 5;
+      video.currentTime = dur / 2;
+      targetTimeRef.current = dur / 2;
+    };
+    video.addEventListener("loadedmetadata", onLoaded);
+
+    function onMouseMove(e: MouseEvent) {
+      if (!video || !video.duration) return;
+      const x = e.clientX / window.innerWidth;
+      const clamped = Math.max(0.05, Math.min(0.95, x));
+      targetTimeRef.current = clamped * video.duration;
+    }
+
+    function onMouseLeave() {
+      if (!video || !video.duration) return;
+      targetTimeRef.current = video.duration / 2;
+    }
+
+    function tick() {
+      if (video && video.duration) {
+        const current = video.currentTime;
+        const target = targetTimeRef.current;
+        const next = current + (target - current) * 0.15;
+        video.currentTime = next;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    }
+    rafRef.current = requestAnimationFrame(tick);
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseleave", onMouseLeave);
+    document.addEventListener("mouseleave", onMouseLeave);
+
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseleave", onMouseLeave);
+      document.removeEventListener("mouseleave", onMouseLeave);
+      video.removeEventListener("loadedmetadata", onLoaded);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  return (
+    <div className="relative flex items-center justify-center lg:justify-end order-first lg:order-last lg:pr-8">
+      <div className="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full" />
+      <video
+        ref={videoRef}
+        src="/hero/eagle.mp4"
+        muted
+        playsInline
+        preload="auto"
+        className="relative w-48 sm:w-64 lg:w-[400px] h-auto invert mix-blend-multiply"
+      />
+    </div>
   );
 }
 
