@@ -27,8 +27,7 @@ export default function Home() {
   const { status, recent, latestSpot, oracleCount, spotHistory, oracles, vault, scrubTs, setScrubTs, scrubRange, isScrubbing, goLive } = useVolStream();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-useEffect(() => {
-    // Selected oracle is valid if it exists in current (resolved) oracles AND has SVI data
+  useEffect(() => {
     const current = selectedId ? oracles[selectedId] : null;
     const stillValid =
       current &&
@@ -37,7 +36,6 @@ useEffect(() => {
       current.expiryMs &&
       (current.expiryMs as number) > Date.now();
     if (!stillValid) {
-      // Pick nearest oracle WITH full data (svi + forward + expiry) from the resolved frame
       const candidates = Object.values(oracles).filter(
         (o) => o.svi && o.forward && o.expiryMs && o.expiryMs > Date.now(),
       );
@@ -57,8 +55,8 @@ useEffect(() => {
     <main className="min-h-screen bg-neutral-50 px-4 py-5 sm:px-6 sm:py-8 text-neutral-900">
       <header className="mx-auto flex max-w-7xl items-center justify-between border-b border-neutral-200 pb-4">
         <Link href="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <Image src="/logo.png" alt="VolWatch" width={32} height={32} className="object-contain shrink-0 sm:h-9 sm:w-9" />
-          <span className="font-mono text-lg sm:text-xl font-bold tracking-tight">VolWatch</span>
+          <Image src="/logo.png" alt="VWATCH" width={32} height={32} className="object-contain shrink-0 sm:h-9 sm:w-9 rounded" />
+            <span className="font-[family-name:var(--font-space-grotesk)] text-lg sm:text-xl font-bold tracking-tight">VWATCH</span>
           <span className="hidden md:inline text-sm uppercase tracking-widest text-neutral-500 font-semibold truncate">DeepBook Predict · testnet</span>
         </Link>
         <div className="flex items-center gap-2 text-sm font-semibold shrink-0">
@@ -174,7 +172,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 function EventBadge({ kind }: { kind: string }) {
   const styles: Record<string, string> = {
     prices: "bg-sky-50 text-sky-700 border-sky-200",
-    svi: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    svi: "bg-blue-50 text-blue-700 border-blue-200",
     activated: "bg-emerald-50 text-emerald-700 border-emerald-200",
     settled: "bg-neutral-100 text-neutral-700 border-neutral-300",
   };
@@ -187,7 +185,7 @@ function EventBadge({ kind }: { kind: string }) {
 
 function renderDetail(e: ReturnType<typeof useVolStream>["recent"][number]) {
   if (e.kind === "prices") {
-    return <span className="text-xs sm:text-sm">spot <span className="text-indigo-700">{formatUSD(e.spot)}</span></span>;
+    return <span className="text-xs sm:text-sm">spot <span className="text-blue-700">{formatUSD(e.spot)}</span></span>;
   }
   if (e.kind === "svi") {
     return <span className="text-xs sm:text-sm text-neutral-500 truncate">a={e.a}</span>;
