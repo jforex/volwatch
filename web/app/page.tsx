@@ -3,43 +3,44 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useSpring } from "framer-motion";
 
 export default function Landing() {
   return (
     <main
-      className="min-h-screen bg-white text-neutral-900 relative"
+      className="min-h-screen bg-neutral-950 text-neutral-100 relative"
       style={{
         backgroundImage:
-          "linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px)",
+          "linear-gradient(to right, rgba(148,163,184,0.07) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,0.07) 1px, transparent 1px)",
         backgroundSize: "48px 48px",
       }}
     >
+      <ScrollProgress />
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 sm:py-6">
         <div className="flex items-center gap-2 sm:gap-3">
           <Image src="/logo.png" alt="VWATCH" width={36} height={36} className="object-contain sm:h-11 sm:w-11 rounded" />
-          <span className="font-[family-name:var(--font-space-grotesk)] text-lg sm:text-xl font-bold tracking-tight">VWATCH</span>
+          <span className="font-[family-name:var(--font-space-grotesk)] text-lg sm:text-xl font-bold tracking-tight text-white">VWATCH</span>
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
-          <a href="https://github.com/jforex/volwatch" target="_blank" rel="noreferrer" className="hidden sm:inline text-base font-medium text-neutral-600 hover:text-neutral-900 transition-colors">GitHub</a>
-          <Link href="/app" className="rounded-md bg-blue-600 px-4 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-base font-bold text-white hover:bg-blue-500 transition-colors shadow-sm">Open Terminal</Link>
+          <a href="https://github.com/jforex/volwatch" target="_blank" rel="noreferrer" className="hidden sm:inline text-base font-medium text-neutral-400 hover:text-white transition-colors">GitHub</a>
+          <Link href="/app" className="rounded-md bg-blue-600 px-4 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-base font-bold text-white hover:bg-blue-500 hover:shadow-[0_0_24px_rgba(37,99,235,0.5)] active:scale-[0.98] transition-all shadow-[0_0_16px_rgba(37,99,235,0.35)]">Open Terminal</Link>
         </div>
       </nav>
 
       <section className="w-full px-6 sm:px-10 lg:px-16 pb-16 sm:pb-24 pt-8 sm:pt-16 lg:pt-24">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-8 lg:items-center max-w-[1400px] mx-auto">
           <div>
-            <h1 className="mt-6 sm:mt-8 text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
+            <h1 className="mt-6 sm:mt-8 text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-white">
               <TypingHeadline />
             </h1>
-            <p className="mt-6 sm:mt-8 text-base sm:text-xl leading-relaxed text-neutral-600">
+            <p className="mt-6 sm:mt-8 text-base sm:text-xl leading-relaxed text-neutral-400">
               VWATCH is the real-time volatility terminal for DeepBook Predict. Live smile curves, on-chain PLP vault risk, arbitrage detection, and AI-readable explanations — decoded from real Sui events.
             </p>
             <div className="mt-8 sm:mt-10 flex flex-wrap gap-3 sm:gap-4">
-              <Link href="/app" className="rounded-md bg-blue-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white hover:bg-blue-500 transition-colors shadow-sm">Open Terminal</Link>
-              <a href="https://github.com/jforex/volwatch" target="_blank" rel="noreferrer" className="rounded-md border-2 border-neutral-200 bg-white px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-neutral-900 hover:bg-neutral-50 transition-colors">View on GitHub</a>
+              <Link href="/app" className="rounded-md bg-blue-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white hover:bg-blue-500 hover:shadow-[0_0_32px_rgba(37,99,235,0.65)] hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)]">Open Terminal</Link>
+              <a href="https://github.com/jforex/volwatch" target="_blank" rel="noreferrer" className="rounded-md border-2 border-neutral-700 bg-transparent px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white hover:bg-neutral-900 hover:border-neutral-500 hover:-translate-y-0.5 active:translate-y-0 transition-all">View on GitHub</a>
             </div>
-            <div className="mt-10 sm:mt-12 grid grid-cols-3 gap-4 sm:gap-8 border-t border-neutral-200 pt-8 sm:pt-10">
+            <div className="mt-10 sm:mt-12 grid grid-cols-3 gap-4 sm:gap-8 border-t border-neutral-800 pt-8 sm:pt-10">
               <Stat label="Live oracles" value="up to 19" />
               <Stat label="Refresh rate" value="3s ticks" />
               <Stat label="Modules" value="3 + arb" />
@@ -53,23 +54,23 @@ export default function Landing() {
       <HowItWorks />
       <BuiltForSection />
 
-      <section className="bg-neutral-50 border-y border-neutral-200">
+      <section className="bg-neutral-900 border-y border-neutral-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24">
           <motion.h2
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, ease: "easeOut" }}
-            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight"
+            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white"
           >
-            Built for traders. Powered by <span className="text-blue-600">on-chain truth.</span>
+            Built for traders. Powered by <span className="text-blue-400">on-chain truth.</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
-            className="mt-4 sm:mt-6 max-w-3xl text-base sm:text-xl text-neutral-600"
+            className="mt-4 sm:mt-6 max-w-3xl text-base sm:text-xl text-neutral-400"
           >
             Every number in VWATCH is read directly from Sui testnet. No mock data. No interpolation. The protocol speaks; the terminal listens.
           </motion.p>
@@ -87,20 +88,47 @@ export default function Landing() {
 
       <StatsBand />
 
-      <section className="w-full bg-neutral-950 text-white py-24 sm:py-32 lg:py-40">
-        <div className="w-full px-6 sm:px-10 lg:px-16">
+      <section className="w-full bg-black border-y-2 border-blue-500 py-24 sm:py-32 lg:py-40 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
+          background: "radial-gradient(circle at 30% 50%, rgba(37,99,235,0.35) 0%, transparent 50%)",
+        }} />
+        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{
+          background: "radial-gradient(circle at 80% 80%, rgba(59,130,246,0.4) 0%, transparent 40%)",
+        }} />
+        <div className="w-full px-6 sm:px-10 lg:px-16 relative">
           <div className="max-w-[1400px] mx-auto">
-            <div className="flex items-center gap-3 mb-8 sm:mb-12">
+            <motion.div
+              initial={{ opacity: 0, x: -24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="flex items-center gap-3 mb-8 sm:mb-12"
+            >
               <span className="h-px w-12 bg-blue-500" />
               <span className="font-mono text-xs sm:text-sm uppercase tracking-[0.3em] text-blue-400">/ THE TERMINAL</span>
-            </div>
+            </motion.div>
 
-            <h2 className="font-[family-name:var(--font-space-grotesk)] text-6xl sm:text-8xl lg:text-[12rem] xl:text-[14rem] font-black tracking-tighter leading-[0.85]">
-              VOL-WATCH.
-            </h2>
-            <h2 className="font-[family-name:var(--font-space-grotesk)] text-6xl sm:text-8xl lg:text-[12rem] xl:text-[14rem] font-black tracking-tighter leading-[0.85] text-blue-500 mt-2 sm:mt-4">
+            <div className="relative inline-block">
+              <div className="absolute -inset-6 sm:-inset-8 bg-blue-600 -skew-y-2 -z-0" aria-hidden />
+              <motion.h2
+                initial={{ opacity: 0, y: 60 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                className="relative font-[family-name:var(--font-space-grotesk)] text-[13vw] sm:text-8xl lg:text-[12rem] xl:text-[14rem] font-black tracking-tighter leading-[0.85] text-white"
+              >
+                VOL-WATCH.
+              </motion.h2>
+            </div>
+            <motion.h2
+              initial={{ opacity: 0, y: 60 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.8, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+              className="font-[family-name:var(--font-space-grotesk)] text-[13vw] sm:text-8xl lg:text-[12rem] xl:text-[14rem] font-black tracking-tighter leading-[0.85] text-blue-500 mt-6 sm:mt-8"
+            >
               DECODED.
-            </h2>
+            </motion.h2>
 
             <div className="mt-12 sm:mt-16 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-end">
               <div className="lg:col-span-7">
@@ -111,7 +139,7 @@ export default function Landing() {
               <div className="lg:col-span-5 flex flex-col sm:flex-row lg:justify-end gap-4">
                 <Link
                   href="/app"
-                  className="group inline-flex items-center justify-between gap-4 rounded-none border-2 border-white bg-white px-6 py-4 sm:px-8 sm:py-5 text-base sm:text-lg font-bold text-neutral-950 hover:bg-blue-500 hover:border-blue-500 hover:text-white transition-all"
+                  className="group inline-flex items-center justify-between gap-4 rounded-none border-2 border-white bg-white px-6 py-4 sm:px-8 sm:py-5 text-base sm:text-lg font-bold text-neutral-950 hover:bg-blue-500 hover:border-blue-500 hover:text-white hover:shadow-[0_0_32px_rgba(37,99,235,0.7)] transition-all"
                 >
                   <span>Open Terminal</span>
                   <span className="font-mono text-xl group-hover:translate-x-1 transition-transform">→</span>
@@ -144,7 +172,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="bg-neutral-950 text-neutral-300">
+      <footer className="bg-neutral-950 text-neutral-300 border-t border-neutral-800">
         <div className="w-full px-6 sm:px-10 lg:px-16 py-16 sm:py-20">
           <div className="max-w-[1400px] mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8">
@@ -196,12 +224,12 @@ export default function Landing() {
             </div>
 
             <div className="mt-12 sm:mt-16 pt-8 border-t border-neutral-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-neutral-500">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-neutral-400">
                 <span>© 2026 VWATCH</span>
                 <span className="hidden sm:inline">·</span>
                 <span>No data stored. No login. No mock prices.</span>
               </div>
-              <div className="text-xs font-mono text-neutral-500">
+              <div className="text-xs font-mono text-neutral-400">
                 v0.2.0 · built for Sui Overflow 2026
               </div>
             </div>
@@ -212,9 +240,21 @@ export default function Landing() {
   );
 }
 
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: 0.4 });
+  return (
+    <motion.div
+      aria-hidden
+      style={{ scaleX }}
+      className="fixed inset-x-0 top-0 z-50 h-[2px] origin-left bg-blue-500 shadow-[0_0_12px_rgba(37,99,235,0.7)]"
+    />
+  );
+}
+
 function LivePreview() {
   return (
-    <section className="w-full px-6 sm:px-10 lg:px-16 py-16 sm:py-24 bg-gradient-to-b from-white to-neutral-50">
+    <section className="w-full px-6 sm:px-10 lg:px-16 py-16 sm:py-24 bg-neutral-950 border-y border-neutral-800">
       <div className="max-w-[1400px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
@@ -223,9 +263,9 @@ function LivePreview() {
           transition={{ duration: 0.7, ease: "easeOut" }}
           className="text-center mb-10 sm:mb-14"
         >
-          <p className="text-sm font-bold uppercase tracking-widest text-blue-600 mb-4">The Terminal</p>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-            Built for speed. <span className="text-blue-600">Designed for clarity.</span>
+          <p className="text-sm font-bold uppercase tracking-widest text-blue-400 mb-4">The Terminal</p>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
+            Built for speed. <span className="text-blue-400">Designed for clarity.</span>
           </h2>
         </motion.div>
 
@@ -234,17 +274,17 @@ function LivePreview() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          className="relative rounded-2xl border border-neutral-200 bg-white shadow-2xl overflow-hidden"
+          className="relative rounded-2xl border border-neutral-800 bg-neutral-900 shadow-2xl overflow-hidden"
         >
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-neutral-200 bg-neutral-50">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-neutral-800 bg-neutral-900">
             <div className="flex gap-1.5">
               <span className="h-3 w-3 rounded-full bg-red-400" />
               <span className="h-3 w-3 rounded-full bg-yellow-400" />
               <span className="h-3 w-3 rounded-full bg-green-400" />
             </div>
-            <span className="ml-3 font-mono text-xs text-neutral-500">vwatch.app/app</span>
-            <span className="ml-auto flex items-center gap-2 text-xs font-semibold text-emerald-600">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="ml-3 font-mono text-xs text-neutral-400">vwatch.app/app</span>
+            <span className="ml-auto flex items-center gap-2 text-xs font-semibold text-emerald-400">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               Live
             </span>
           </div>
@@ -258,64 +298,85 @@ function LivePreview() {
                 { label: "Vault", value: "Healthy", tone: "emerald" },
                 { label: "Arb", value: "Clean", tone: "emerald" },
               ].map((v, i) => (
-                <div key={i} className="rounded-lg border border-neutral-200 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">{v.label}</p>
+                <div key={i} className="rounded-lg border border-neutral-800 bg-neutral-950 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">{v.label}</p>
                   <p className={`mt-1 font-mono text-sm sm:text-base font-bold ${
-                    v.tone === "amber" ? "text-amber-600" :
-                    v.tone === "red" ? "text-red-600" :
-                    "text-emerald-600"
+                    v.tone === "amber" ? "text-amber-400" :
+                    v.tone === "red" ? "text-red-400" :
+                    "text-emerald-400"
                   }`}>{v.value}</p>
                 </div>
               ))}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2 rounded-lg border border-neutral-200 p-4">
+              <div className="lg:col-span-2 rounded-lg border border-neutral-800 bg-neutral-950 p-4">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">BTC Spot</span>
-                  <span className="font-mono text-lg font-bold">$108,450</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">BTC Spot</span>
+                  <span className="font-mono text-lg font-bold text-white">$108,450</span>
                 </div>
                 <svg viewBox="0 0 400 80" className="w-full h-16">
-                  <polyline
+                  <motion.polyline
                     points="0,60 30,55 60,58 90,40 120,45 150,30 180,35 210,25 240,28 270,15 300,20 330,12 360,18 400,10"
                     fill="none"
-                    stroke="rgb(37, 99, 235)"
+                    stroke="rgb(96, 165, 250)"
                     strokeWidth="2"
+                    initial={{ pathLength: 0 }}
+                    whileInView={{ pathLength: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1.4, ease: "easeOut" }}
                   />
                 </svg>
               </div>
-              <div className="rounded-lg border border-neutral-200 p-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">Vol Smile</span>
+              <div className="rounded-lg border border-neutral-800 bg-neutral-950 p-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Vol Smile</span>
                 <svg viewBox="0 0 200 80" className="w-full h-16 mt-3">
-                  <path
+                  <motion.path
                     d="M 10 30 Q 50 55, 100 50 Q 150 45, 190 25"
                     fill="none"
-                    stroke="rgb(37, 99, 235)"
+                    stroke="rgb(96, 165, 250)"
                     strokeWidth="2"
+                    initial={{ pathLength: 0 }}
+                    whileInView={{ pathLength: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1.2, ease: "easeOut" }}
                   />
-                  <circle cx="100" cy="50" r="3" fill="rgb(37, 99, 235)" />
+                  <motion.circle
+                    cx="100" cy="50" r="3" fill="rgb(96, 165, 250)"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.3, delay: 0.6 }}
+                  />
                 </svg>
               </div>
             </div>
 
-            <div className="mt-4 rounded-lg border border-neutral-200 overflow-hidden">
-              <div className="px-4 py-2 bg-neutral-50 border-b border-neutral-200">
-                <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">Live event tape</span>
+            <div className="mt-4 rounded-lg border border-neutral-800 bg-neutral-950 overflow-hidden">
+              <div className="px-4 py-2 bg-neutral-900 border-b border-neutral-800">
+                <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Live event tape</span>
               </div>
-              <div className="divide-y divide-neutral-100 font-mono text-xs">
+              <div className="divide-y divide-neutral-800 font-mono text-xs">
                 {[
                   { kind: "prices", id: "0x7681…3c43", detail: "spot $108,450" },
                   { kind: "svi", id: "0x4a92…b8e1", detail: "a=24343" },
                   { kind: "prices", id: "0x9f12…ac7d", detail: "spot $108,442" },
                 ].map((e, i) => (
-                  <div key={i} className="flex items-center gap-3 px-4 py-2">
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -12 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.2 + i * 0.12, ease: "easeOut" }}
+                    className="flex items-center gap-3 px-4 py-2"
+                  >
                     <span className={`w-14 rounded border px-1 py-0.5 text-center text-[9px] font-bold uppercase tracking-wider ${
-                      e.kind === "prices" ? "bg-sky-50 text-sky-700 border-sky-200" :
-                      "bg-blue-50 text-blue-700 border-blue-200"
+                      e.kind === "prices" ? "bg-sky-950 text-sky-300 border-sky-800" :
+                      "bg-blue-950 text-blue-300 border-blue-800"
                     }`}>{e.kind}</span>
                     <span className="text-neutral-500">{e.id}</span>
-                    <span className="ml-auto font-semibold text-neutral-900">{e.detail}</span>
-                  </div>
+                    <span className="ml-auto font-semibold text-white">{e.detail}</span>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -329,8 +390,8 @@ function LivePreview() {
           transition={{ duration: 0.7, delay: 0.4 }}
           className="text-center mt-8"
         >
-          <Link href="/app" className="inline-flex items-center gap-2 text-base font-bold text-blue-600 hover:text-blue-700 transition-colors">
-            Open the live terminal →
+          <Link href="/app" className="group inline-flex items-center gap-2 text-base font-bold text-blue-400 hover:text-blue-300 transition-colors">
+            Open the live terminal <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
           </Link>
         </motion.div>
       </div>
@@ -345,7 +406,7 @@ function HowItWorks() {
     { num: "03", title: "Render the surface", desc: "The terminal renders smile curves, vault risk metrics, term structure, and arbitrage checks — all in plain English alongside the math." },
   ];
   return (
-    <section className="w-full px-6 sm:px-10 lg:px-16 py-16 sm:py-24 bg-white">
+    <section className="w-full px-6 sm:px-10 lg:px-16 py-16 sm:py-24 bg-neutral-950">
       <div className="max-w-[1400px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -354,9 +415,9 @@ function HowItWorks() {
           transition={{ duration: 0.7 }}
           className="mb-12 sm:mb-16"
         >
-          <p className="text-sm font-bold uppercase tracking-widest text-blue-600 mb-4">How it works</p>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight max-w-3xl">
-            From on-chain bytes to <span className="text-blue-600">readable vol.</span>
+          <p className="text-sm font-bold uppercase tracking-widest text-blue-400 mb-4">How it works</p>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight max-w-3xl text-white">
+            From on-chain bytes to <span className="text-blue-400">readable vol.</span>
           </h2>
         </motion.div>
 
@@ -370,9 +431,9 @@ function HowItWorks() {
               transition={{ duration: 0.8, delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }}
               className="relative"
             >
-              <p className="font-[family-name:var(--font-space-grotesk)] text-6xl sm:text-7xl font-bold text-blue-600/20 leading-none">{step.num}</p>
-              <h3 className="mt-4 text-2xl font-bold tracking-tight">{step.title}</h3>
-              <p className="mt-3 text-base leading-relaxed text-neutral-600">{step.desc}</p>
+              <p aria-hidden className="font-[family-name:var(--font-space-grotesk)] text-6xl sm:text-7xl font-bold text-blue-500/40 leading-none">{step.num}</p>
+              <h3 className="mt-4 text-2xl font-bold tracking-tight text-white">{step.title}</h3>
+              <p className="mt-3 text-base leading-relaxed text-neutral-400">{step.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -400,7 +461,7 @@ function BuiltForSection() {
     },
   ];
   return (
-    <section className="w-full px-6 sm:px-10 lg:px-16 py-16 sm:py-24 bg-neutral-50 border-y border-neutral-200">
+    <section className="w-full px-6 sm:px-10 lg:px-16 py-16 sm:py-24 bg-neutral-900 border-y border-neutral-800">
       <div className="max-w-[1400px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -409,9 +470,9 @@ function BuiltForSection() {
           transition={{ duration: 0.7 }}
           className="mb-12 sm:mb-16"
         >
-          <p className="text-sm font-bold uppercase tracking-widest text-blue-600 mb-4">Who it's for</p>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-            One terminal. <span className="text-blue-600">Three audiences.</span>
+          <p className="text-sm font-bold uppercase tracking-widest text-blue-400 mb-4">Who it's for</p>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
+            One terminal. <span className="text-blue-400">Three audiences.</span>
           </h2>
         </motion.div>
 
@@ -422,13 +483,13 @@ function BuiltForSection() {
               initial={{ opacity: 0, y: 60, scale: 0.95 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.8, delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.8, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
               whileHover={{ y: -6, transition: { duration: 0.2 } }}
-              className="rounded-xl border border-neutral-200 bg-white p-6 sm:p-8 hover:border-blue-300 hover:shadow-lg"
+              className="rounded-xl border border-neutral-800 bg-neutral-950 p-6 sm:p-8 hover:border-blue-500/60 hover:shadow-[0_0_32px_rgba(37,99,235,0.25)]"
             >
-              <span className="inline-block rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-700">{p.label}</span>
-              <h3 className="mt-5 text-2xl font-bold tracking-tight">{p.title}</h3>
-              <p className="mt-3 text-base leading-relaxed text-neutral-700">{p.desc}</p>
+              <span className="inline-block rounded-full bg-blue-950 border border-blue-800 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-300">{p.label}</span>
+              <h3 className="mt-5 text-2xl font-bold tracking-tight text-white">{p.title}</h3>
+              <p className="mt-3 text-base leading-relaxed text-neutral-400">{p.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -445,20 +506,20 @@ function StatsBand() {
     { num: "∞", label: "On-chain truth" },
   ];
   return (
-    <section className="w-full px-6 sm:px-10 lg:px-16 py-16 sm:py-20 bg-white">
+    <section className="w-full px-6 sm:px-10 lg:px-16 py-16 sm:py-24 bg-neutral-950">
       <div className="max-w-[1400px] mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12">
           {stats.map((s, i) => (
             <motion.div
               key={s.label}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 30, scale: 0.92 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-80px" }}
               transition={{ duration: 0.7, delay: i * 0.1, ease: "easeOut" }}
               className="text-center"
             >
-              <p className="font-[family-name:var(--font-space-grotesk)] text-5xl sm:text-6xl lg:text-7xl font-bold text-blue-600">{s.num}</p>
-              <p className="mt-2 sm:mt-4 text-sm sm:text-base font-semibold uppercase tracking-wider text-neutral-600">{s.label}</p>
+              <p className="font-[family-name:var(--font-space-grotesk)] text-5xl sm:text-6xl lg:text-7xl font-bold text-blue-400">{s.num}</p>
+              <p className="mt-2 sm:mt-4 text-sm sm:text-base font-semibold uppercase tracking-wider text-neutral-400">{s.label}</p>
             </motion.div>
           ))}
         </div>
@@ -473,13 +534,15 @@ function TypingHeadline() {
     "Deploy.",
   ];
   const blueLineIdx = 1;
+  const charDelay = 0.022;
+  const totalChars = lines.join("").length;
 
   let globalIdx = 0;
 
   return (
     <span aria-label="See risk. Find edge. Deploy." className="block">
       {lines.map((line, lineIdx) => (
-        <span key={lineIdx} className={`block ${lineIdx === blueLineIdx ? "text-blue-600" : ""}`}>
+        <span key={lineIdx} className={`block ${lineIdx === blueLineIdx ? "text-blue-400" : "text-white"}`}>
           {line.split("").map((char, charIdx) => {
             const i = globalIdx++;
             return (
@@ -489,7 +552,7 @@ function TypingHeadline() {
                 animate={{ opacity: 1 }}
                 transition={{
                   duration: 0.05,
-                  delay: i * 0.04,
+                  delay: i * charDelay,
                   ease: "easeOut",
                 }}
               >
@@ -497,6 +560,20 @@ function TypingHeadline() {
               </motion.span>
             );
           })}
+          {lineIdx === lines.length - 1 && (
+            <motion.span
+              aria-hidden
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [1, 1, 0, 0] }}
+              transition={{
+                delay: totalChars * charDelay,
+                duration: 1,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+              className="ml-1 inline-block h-[0.8em] w-[4px] translate-y-[0.08em] bg-blue-400"
+            />
+          )}
         </span>
       ))}
     </span>
@@ -536,8 +613,9 @@ function EagleHero() {
       if (video && video.duration) {
         const current = video.currentTime;
         const target = targetTimeRef.current;
-        const next = current + (target - current) * 0.15;
-        video.currentTime = next;
+        if (Math.abs(target - current) > 0.01) {
+          video.currentTime = current + (target - current) * 0.15;
+        }
       }
       rafRef.current = requestAnimationFrame(tick);
     }
@@ -558,14 +636,14 @@ function EagleHero() {
 
   return (
     <div className="relative flex items-center justify-center lg:justify-end order-first lg:order-last lg:pr-0">
-      <div className="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full" />
+      <div className="absolute inset-0 bg-blue-500/40 blur-3xl rounded-full" />
       <video
         ref={videoRef}
         src="/hero/eagle.mp4"
         muted
         playsInline
         preload="auto"
-        className="relative w-48 sm:w-64 lg:w-[400px] h-auto invert mix-blend-multiply"
+        className="relative w-48 sm:w-64 lg:w-[400px] h-auto mix-blend-screen"
       />
     </div>
   );
@@ -574,8 +652,8 @@ function EagleHero() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs sm:text-sm uppercase tracking-wider text-neutral-500 font-semibold">{label}</p>
-      <p className="mt-1 sm:mt-2 font-mono text-lg sm:text-2xl font-bold text-neutral-900">{value}</p>
+      <p className="text-xs sm:text-sm uppercase tracking-wider text-neutral-400 font-semibold">{label}</p>
+      <p className="mt-1 sm:mt-2 font-mono text-lg sm:text-2xl font-bold text-white">{value}</p>
     </div>
   );
 }
@@ -586,12 +664,12 @@ function Feature({ title, description, index = 0 }: { title: string; description
       initial={{ opacity: 0, y: 80, scale: 0.95 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.8, delay: index * 0.15, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.8, delay: index * 0.12, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -6, transition: { duration: 0.2 } }}
-      className="rounded-xl border border-neutral-200 bg-white p-6 sm:p-8 hover:border-blue-300 hover:shadow-lg"
+      className="rounded-xl border border-neutral-800 bg-neutral-950 p-6 sm:p-8 hover:border-blue-500/60 hover:shadow-[0_0_32px_rgba(37,99,235,0.25)]"
     >
-      <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-900">{title}</h3>
-      <p className="mt-3 sm:mt-4 text-base sm:text-lg leading-relaxed text-neutral-700">{description}</p>
+      <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white">{title}</h3>
+      <p className="mt-3 sm:mt-4 text-base sm:text-lg leading-relaxed text-neutral-400">{description}</p>
     </motion.div>
   );
 }
