@@ -34,7 +34,7 @@ export default function Landing() {
               <TypingHeadline />
             </h1>
             <p className="mt-6 sm:mt-8 text-base sm:text-xl leading-relaxed text-neutral-400">
-              VWATCH is the real-time volatility terminal for DeepBook Predict. Live smile curves, on-chain PLP vault risk, arbitrage detection, and AI-readable explanations — decoded from real Sui events.
+              VWATCH is the real-time volatility terminal for DeepBook Predict. Live smile curves, Onchain PLP vault risk, arbitrage detection, and AI-readable explanations decoded from real Sui events.
             </p>
             <div className="mt-8 sm:mt-10 flex flex-wrap gap-3 sm:gap-4">
               <Link href="/app" className="rounded-md bg-blue-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white hover:bg-blue-500 hover:shadow-[0_0_32px_rgba(37,99,235,0.65)] hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)]">Open Terminal</Link>
@@ -63,7 +63,7 @@ export default function Landing() {
             transition={{ duration: 0.7, ease: "easeOut" }}
             className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white"
           >
-            Built for traders. Powered by <span className="text-blue-400">on-chain truth.</span>
+            Built for traders. Powered by <span className="text-blue-400">Onchain truth.</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 30 }}
@@ -133,7 +133,7 @@ export default function Landing() {
             <div className="mt-12 sm:mt-16 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-end">
               <div className="lg:col-span-7">
                 <p className="text-xl sm:text-2xl lg:text-3xl text-neutral-300 leading-snug max-w-2xl">
-                  No mock prices. No login walls. No marketing fluff. <span className="text-white">Just the protocol — readable.</span>
+                  No mock prices. No login walls. No marketing fluff. <span className="text-white">Just the protocol, readable.</span>
                 </p>
               </div>
               <div className="lg:col-span-5 flex flex-col sm:flex-row lg:justify-end gap-4">
@@ -403,7 +403,7 @@ function HowItWorks() {
   const steps = [
     { num: "01", title: "Read Sui events", desc: "Backend subscribes to DeepBook Predict's event stream on Sui testnet. Every prices, svi, activation, and settlement event is captured at source." },
     { num: "02", title: "Parse SVI parameters", desc: "Raw on-chain SVI calibration data (a, b, m, rho, sigma) is decoded, normalized, and converted into implied vol curves per oracle, per expiry." },
-    { num: "03", title: "Render the surface", desc: "The terminal renders smile curves, vault risk metrics, term structure, and arbitrage checks — all in plain English alongside the math." },
+    { num: "03", title: "Render the surface", desc: "The terminal renders smile curves, vault risk metrics, term structure, and arbitrage checks, all in plain English alongside the math." },
   ];
   return (
     <section className="w-full px-6 sm:px-10 lg:px-16 py-16 sm:py-24 bg-neutral-950">

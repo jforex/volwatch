@@ -21,10 +21,7 @@ export default function Home() {
     .filter((o) => o.svi && o.forward && o.expiryMs && o.expiryMs > now)
     .sort((a, b) => (a.expiryMs ?? 0) - (b.expiryMs ?? 0))[0];
 
-  const atm =
-    nearestOracle && nearestOracle.svi && nearestOracle.forward && nearestOracle.expiryMs
-      ? atmIV(nearestOracle.svi, nearestOracle.forward, (nearestOracle.expiryMs - now) / (365 * 24 * 60 * 60 * 1000))
-      : null;
+  const atm = nearestOracle && nearestOracle.svi ? atmIV(nearestOracle.svi) : null;
 
   const util = vault ? vault.utilizationPct : null;
   const high = spotHistory.length > 0 ? Math.max(...spotHistory.map((d) => d.spot)) : null;

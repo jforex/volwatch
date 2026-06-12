@@ -27,67 +27,156 @@ export function ArbCheck({ oracles }: Props) {
 
   if (stats.total === 0) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-6 text-center text-sm text-neutral-500 shadow-sm">
+      <div className="rounded border border-neutral-800 bg-neutral-900 p-6 text-center font-mono text-xs text-neutral-500">
         Waiting for oracle data to run arb checks…
       </div>
     );
   }
 
-  const overallSeverity = stats.butterflyViolations > 0 || stats.calendarViolations > 0 ? "violation" : stats.butterflyWarns > 0 || stats.calendarWarns > 0 ? "warn" : "ok";
+  const overallSeverity =
+    stats.butterflyViolations > 0 || stats.calendarViolations > 0
+      ? "violation"
+      : stats.butterflyWarns > 0 || stats.calendarWarns > 0
+        ? "warn"
+        : "ok";
+
+  // Severity-based banner tint
+  const bannerTint =
+    overallSeverity === "violation"
+      ? "border-red-500/40 bg-red-950/30"
+      : overallSeverity === "warn"
+        ? "border-amber-500/40 bg-amber-950/30"
+        : "border-emerald-500/30 bg-emerald-950/20";
+
+  const bannerHeadline =
+    overallSeverity === "violation"
+      ? "ARBITRAGE OPPORTUNITY DETECTED"
+      : overallSeverity === "warn"
+        ? "MARGINAL CONDITIONS"
+        : "SURFACE IS ARB-FREE";
+
+  const bannerSub =
+    overallSeverity === "violation"
+      ? "One or more conditions violated — see breakdown below."
+      : overallSeverity === "warn"
+        ? "Conditions are close to bounds. Worth watching."
+        : "All Gatheral conditions hold. No exploitable mispricing.";
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <div className="mb-4 flex items-baseline justify-between">
-        <div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-700">Arbitrage-free check</h2>
-          <p className="mt-1 text-xs text-neutral-500">Butterfly (per expiry) · Calendar (adjacent expiries) · Gatheral conditions</p>
+    <div className="space-y-3">
+      {/* Severity banner */}
+      <div className={`rounded border px-4 py-3 ${bannerTint}`}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <SeverityIcon severity={overallSeverity} large />
+            <div className="min-w-0">
+              <p className={`font-mono text-[11px] sm:text-xs uppercase tracking-widest font-bold ${
+                overallSeverity === "violation" ? "text-red-300" :
+                overallSeverity === "warn" ? "text-amber-300" :
+                "text-emerald-300"
+              }`}>
+                {bannerHeadline}
+              </p>
+              <p className="mt-0.5 text-[11px] sm:text-xs text-neutral-400 truncate">{bannerSub}</p>
+            </div>
+          </div>
+          <SeverityBadge severity={overallSeverity} />
         </div>
-        <SeverityBadge severity={overallSeverity} />
       </div>
 
-      <div className="grid grid-cols-2 gap-5 border-b border-neutral-200 pb-5">
-        <Summary title="Butterfly" subtitle={`${stats.total} oracles checked`} violations={stats.butterflyViolations} warns={stats.butterflyWarns} passed={stats.total - stats.butterflyViolations - stats.butterflyWarns} />
-        <Summary title="Calendar" subtitle={`${stats.calendarTotal} pairs checked`} violations={stats.calendarViolations} warns={stats.calendarWarns} passed={stats.calendarTotal - stats.calendarViolations - stats.calendarWarns} />
+      {/* Summary stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <Summary
+          title="Butterfly"
+          subtitle={`${stats.total} expiries checked`}
+          violations={stats.butterflyViolations}
+          warns={stats.butterflyWarns}
+          passed={stats.total - stats.butterflyViolations - stats.butterflyWarns}
+        />
+        <Summary
+          title="Calendar"
+          subtitle={`${stats.calendarTotal} pairs checked`}
+          violations={stats.calendarViolations}
+          warns={stats.calendarWarns}
+          passed={stats.calendarTotal - stats.calendarViolations - stats.calendarWarns}
+        />
       </div>
 
-      <div className="mt-5">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-600">Butterfly results</h3>
-        <ul className="mt-2 divide-y divide-neutral-200 font-mono text-sm">
+      {/* Butterfly results */}
+      <div className="rounded border border-neutral-800 bg-neutral-900/60">
+        <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">BUTTERFLY RESULTS</span>
+          <span className="font-mono text-[10px] text-neutral-600">per-expiry · Gatheral g(k) ≥ 0</span>
+        </div>
+        <ul className="divide-y divide-neutral-800/60 font-mono text-xs">
           {butterflies.slice(0, 8).map((b) => (
             <ButterflyRow key={b.oracleId} oracleId={b.oracleId} expiryMs={b.expiryMs} check={b.check} />
           ))}
         </ul>
-        {butterflies.length > 8 && <p className="mt-2 text-xs text-neutral-500">+{butterflies.length - 8} more</p>}
+        {butterflies.length > 8 && (
+          <p className="border-t border-neutral-800 px-4 py-2 font-mono text-[10px] text-neutral-600">+{butterflies.length - 8} more</p>
+        )}
       </div>
 
+      {/* Calendar pairs */}
       {calendars.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-600">Calendar pairs</h3>
-          <ul className="mt-2 divide-y divide-neutral-200 font-mono text-sm">
+        <div className="rounded border border-neutral-800 bg-neutral-900/60">
+          <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">CALENDAR PAIRS</span>
+            <span className="font-mono text-[10px] text-neutral-600">adjacent expiries · w(long) ≥ w(short)</span>
+          </div>
+          <ul className="divide-y divide-neutral-800/60 font-mono text-xs">
             {calendars.slice(0, 6).map((c, i) => (<CalendarRow key={i} pair={c} />))}
           </ul>
-          {calendars.length > 6 && <p className="mt-2 text-xs text-neutral-500">+{calendars.length - 6} more</p>}
+          {calendars.length > 6 && (
+            <p className="border-t border-neutral-800 px-4 py-2 font-mono text-[10px] text-neutral-600">+{calendars.length - 6} more</p>
+          )}
         </div>
       )}
     </div>
   );
 }
 
+function SeverityIcon({ severity, large = false }: { severity: "ok" | "warn" | "violation"; large?: boolean }) {
+  const size = large ? "h-2.5 w-2.5" : "h-2 w-2";
+  const color =
+    severity === "violation" ? "bg-red-500" :
+    severity === "warn" ? "bg-amber-500" :
+    "bg-emerald-500";
+  return <span className={`inline-block rounded-full ${size} ${color} ${severity === "violation" ? "animate-pulse" : ""}`} />;
+}
+
 function SeverityBadge({ severity }: { severity: "ok" | "warn" | "violation" }) {
-  if (severity === "violation") return <span className="rounded border border-red-300 bg-red-50 px-3 py-1 text-sm text-red-700 font-bold">✗ violations</span>;
-  if (severity === "warn") return <span className="rounded border border-amber-300 bg-amber-50 px-3 py-1 text-sm text-amber-700 font-bold">⚠ marginal</span>;
-  return <span className="rounded border border-emerald-300 bg-emerald-50 px-3 py-1 text-sm text-emerald-700 font-bold">✓ arb-free</span>;
+  if (severity === "violation") {
+    return (
+      <span className="shrink-0 rounded border border-red-500/40 bg-red-950/60 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-red-300 font-bold">
+        ✗ violations
+      </span>
+    );
+  }
+  if (severity === "warn") {
+    return (
+      <span className="shrink-0 rounded border border-amber-500/40 bg-amber-950/60 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-amber-300 font-bold">
+        ⚠ marginal
+      </span>
+    );
+  }
+  return (
+    <span className="shrink-0 rounded border border-emerald-500/30 bg-emerald-950/60 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-emerald-300 font-bold">
+      ✓ arb-free
+    </span>
+  );
 }
 
 function Summary({ title, subtitle, passed, warns, violations }: { title: string; subtitle: string; passed: number; warns: number; violations: number }) {
   return (
-    <div>
-      <p className="text-sm uppercase tracking-wider text-neutral-700 font-bold">{title}</p>
-      <p className="mt-0.5 text-xs text-neutral-500">{subtitle}</p>
-      <div className="mt-2 flex gap-4 font-mono text-sm font-bold">
-        <span className="text-emerald-700">✓ {passed}</span>
-        {warns > 0 && <span className="text-amber-700">⚠ {warns}</span>}
-        {violations > 0 && <span className="text-red-700">✗ {violations}</span>}
+    <div className="rounded border border-neutral-800 bg-neutral-900/60 px-4 py-3">
+      <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 font-bold">{title}</p>
+      <p className="mt-0.5 font-mono text-[10px] text-neutral-600">{subtitle}</p>
+      <div className="mt-2 flex gap-3 sm:gap-4 font-mono text-xs font-bold">
+        <span className="text-emerald-400">✓ {passed}</span>
+        {warns > 0 && <span className="text-amber-400">⚠ {warns}</span>}
+        {violations > 0 && <span className="text-red-400">✗ {violations}</span>}
       </div>
     </div>
   );
@@ -95,29 +184,41 @@ function Summary({ title, subtitle, passed, warns, violations }: { title: string
 
 function ButterflyRow({ oracleId, expiryMs, check }: { oracleId: string; expiryMs: number; check: ButterflyCheck }) {
   const minsToExpiry = Math.round((expiryMs - Date.now()) / 60000);
-  const color = check.severity === "ok" ? "text-emerald-700" : check.severity === "warn" ? "text-amber-700" : "text-red-700";
+  const tone =
+    check.severity === "ok" ? "text-emerald-400" :
+    check.severity === "warn" ? "text-amber-400" :
+    "text-red-400";
   const icon = check.severity === "ok" ? "✓" : check.severity === "warn" ? "⚠" : "✗";
   return (
-    <li className="flex items-center gap-3 py-2">
-      <span className={`w-4 font-bold ${color}`}>{icon}</span>
-      <span className="text-neutral-700">{shortId(oracleId)}</span>
-      <span className="text-xs text-neutral-500">in {minsToExpiry}m</span>
-      <span className="ml-auto text-neutral-600">min g = <span className={`${color} font-bold`}>{check.minG.toFixed(4)}</span></span>
+    <li className="flex items-center gap-3 px-4 py-2 hover:bg-neutral-800/40">
+      <span className={`w-4 font-bold shrink-0 ${tone}`}>{icon}</span>
+      <span className="text-neutral-300 shrink-0">{shortId(oracleId)}</span>
+      <span className="text-[10px] text-neutral-500 shrink-0">in {minsToExpiry}m</span>
+      <span className="ml-auto text-neutral-400 truncate">
+        min g = <span className={`${tone} font-bold`}>{check.minG.toFixed(4)}</span>
+      </span>
     </li>
   );
 }
 
 function CalendarRow({ pair }: { pair: CalendarPair }) {
-  const color = pair.severity === "ok" ? "text-emerald-700" : pair.severity === "warn" ? "text-amber-700" : "text-red-700";
+  const tone =
+    pair.severity === "ok" ? "text-emerald-400" :
+    pair.severity === "warn" ? "text-amber-400" :
+    "text-red-400";
   const icon = pair.severity === "ok" ? "✓" : pair.severity === "warn" ? "⚠" : "✗";
   const shortMins = Math.round((pair.shortExpiryMs - Date.now()) / 60000);
   const longMins = Math.round((pair.longExpiryMs - Date.now()) / 60000);
   return (
-    <li className="flex items-center gap-3 py-2">
-      <span className={`w-4 font-bold ${color}`}>{icon}</span>
-      <span className="text-neutral-700">{shortId(pair.shortOracleId)} → {shortId(pair.longOracleId)}</span>
-      <span className="text-xs text-neutral-500">{shortMins}m → {longMins}m</span>
-      <span className="ml-auto text-neutral-600">Δw = <span className={`${color} font-bold`}>{(pair.worstLongTotalVar - pair.worstShortTotalVar).toFixed(5)}</span></span>
+    <li className="flex items-center gap-3 px-4 py-2 hover:bg-neutral-800/40">
+      <span className={`w-4 font-bold shrink-0 ${tone}`}>{icon}</span>
+      <span className="text-neutral-300 shrink-0">
+        {shortId(pair.shortOracleId)} → {shortId(pair.longOracleId)}
+      </span>
+      <span className="text-[10px] text-neutral-500 shrink-0">{shortMins}m → {longMins}m</span>
+      <span className="ml-auto text-neutral-400 truncate">
+        Δw = <span className={`${tone} font-bold`}>{(pair.worstLongTotalVar - pair.worstShortTotalVar).toFixed(5)}</span>
+      </span>
     </li>
   );
 }
