@@ -9,6 +9,7 @@ import { ArbCheck } from "../../components/ArbCheck";
 import { TermStructureChart } from "../../components/TermStructureChart";
 import { SkewChart } from "../../components/SkewChart";
 import { VolSurface3D } from "../../components/VolSurface3D";
+import { ExpandableChart } from "../../components/ExpandableChart";
 import { atmIV } from "../../lib/svi";
 import { classifySmile } from "../../lib/classifySmile";
 import { formatTime } from "../../lib/format";
@@ -134,7 +135,7 @@ export default function SurfacePage() {
 
         {/* Main grid: 3D surface (left, 8 cols) + term/skew stacked (right, 4 cols) */}
         <div className="mt-3 grid grid-cols-12 gap-3">
-        <section className="col-span-12 lg:col-span-8 rounded border border-neutral-800 bg-neutral-900 min-h-[520px] overflow-hidden">
+     <section className="col-span-12 lg:col-span-8 rounded border border-neutral-800 bg-neutral-900 min-h-[520px] overflow-hidden relative">
             <div className="border-b border-neutral-800 px-4 py-2">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-xs uppercase tracking-widest text-neutral-300">3D VOL SURFACE</span>
@@ -144,27 +145,33 @@ export default function SurfacePage() {
                 Each point = market's implied volatility for an option at that strike + expiry. Peaks = expensive options. Valleys = cheap.
               </p>
             </div>
-            <div className="h-[480px]">
-              <VolSurface3D oracles={oracles} now={now} isScrubbing={isScrubbing} />
-            </div>
+            <ExpandableChart title="3D Vol Surface">
+              <div className="h-[480px]">
+                <VolSurface3D oracles={oracles} now={now} isScrubbing={isScrubbing} />
+              </div>
+            </ExpandableChart>
           </section>
 
           <aside className="col-span-12 lg:col-span-4 flex flex-col gap-3">
-            <section className="rounded border border-neutral-800 bg-neutral-900">
+          <section className="rounded border border-neutral-800 bg-neutral-900 relative">
               <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2">
                 <span className="font-mono text-xs uppercase tracking-widest text-neutral-300">TERM STRUCTURE</span>
-                <span className="font-mono text-xs text-neutral-200">ATM IV vs expiry</span>
+                <span className="font-mono text-xs text-neutral-400">ATM IV vs expiry</span>
               </div>
-              <TermStructureChart oracles={oracles} now={now} height={230} />
+              <ExpandableChart title="Term Structure">
+                <TermStructureChart oracles={oracles} now={now} height={230} />
+              </ExpandableChart>
             </section>
 
-            <section className="rounded border border-neutral-800 bg-neutral-900">
+        <section className="rounded border border-neutral-800 bg-neutral-900 relative">
               <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2">
                 <span className="font-mono text-xs uppercase tracking-widest text-neutral-300">SKEW CURVE</span>
-                <span className="font-mono text-xs text-neutral-200">IV vs log-moneyness · nearest exp</span>
+                <span className="font-mono text-xs text-neutral-400">IV vs log-moneyness · nearest exp</span>
               </div>
-              <SkewChart oracles={oracles} now={now} height={230} />
-            </section>
+              <ExpandableChart title="Skew Curve">
+                <SkewChart oracles={oracles} now={now} height={230} />
+              </ExpandableChart>
+            </section> 
           </aside>
         </div>
 
@@ -191,7 +198,7 @@ export default function SurfacePage() {
             </div>
           </section>
 
-          <section className="col-span-12 lg:col-span-8 rounded border border-neutral-800 bg-neutral-900">
+   <section className="col-span-12 lg:col-span-8 rounded border border-neutral-800 bg-neutral-900 relative">
             <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2 gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <span className="font-mono text-xs uppercase tracking-widest text-neutral-300">EXPIRY DEEP-DIVE</span>
@@ -206,24 +213,26 @@ export default function SurfacePage() {
                   </span>
                 )}
               </div>
-              <span className="font-mono text-xs text-neutral-200 truncate shrink-0">
+              <span className="font-mono text-xs text-neutral-400 truncate shrink-0">
                 {selected ? `oracle ${selected.oracleId.slice(0, 8)}…` : "no oracle selected"}
               </span>
             </div>
-            <div className="p-3 sm:p-4">
-              {selected ? (
-                <>
-                  <SmileChart oracle={selected} />
-                  {selectedShape && (
-                    <p className="mt-3 font-mono text-xs text-neutral-200">{selectedShape.description}</p>
-                  )}
-                </>
-              ) : (
-                <div className="flex h-64 items-center justify-center text-center text-sm text-neutral-300">
-                  Select an oracle from the list →
-                </div>
-              )}
-            </div>
+            <ExpandableChart title="Expiry Deep-Dive">
+              <div className="p-3 sm:p-4">
+                {selected ? (
+                  <>
+                    <SmileChart oracle={selected} />
+                    {selectedShape && (
+                      <p className="mt-3 font-mono text-xs text-neutral-300">{selectedShape.description}</p>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex h-64 items-center justify-center text-center text-sm text-neutral-300">
+                    Select an oracle from the list →
+                  </div>
+                )}
+              </div>
+            </ExpandableChart>
           </section>
         </div>
       </div>

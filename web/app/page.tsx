@@ -11,7 +11,7 @@ export default function Landing() {
       className="min-h-screen bg-neutral-950 text-neutral-100 relative"
       style={{
         backgroundImage:
-          "linear-gradient(to right, rgba(148,163,184,0.07) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,0.07) 1px, transparent 1px)",
+          "linear-gradient(to right, rgba(148,163,184,0.14) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,0.14) 1px, transparent 1px)",
         backgroundSize: "48px 48px",
       }}
     >
@@ -54,8 +54,25 @@ export default function Landing() {
       <HowItWorks />
       <BuiltForSection />
 
-      <section className="bg-neutral-900 border-y border-neutral-800">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24">
+  <section className="bg-blue-700 border-y-2 border-blue-600 relative overflow-hidden">
+        {/* Subtle blue gradient texture */}
+        <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
+          background: "radial-gradient(circle at 20% 50%, rgba(30,58,138,0.5) 0%, transparent 60%)",
+        }} />
+        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{
+          background: "radial-gradient(circle at 80% 80%, rgba(96,165,250,0.4) 0%, transparent 50%)",
+        }} />
+
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 py-16 sm:py-24 relative">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.5 }}
+            className="font-mono text-xs sm:text-sm uppercase tracking-[0.3em] text-blue-200 mb-4 font-bold"
+          >
+            / WHAT IT DOES
+          </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -63,25 +80,25 @@ export default function Landing() {
             transition={{ duration: 0.7, ease: "easeOut" }}
             className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white"
           >
-            Built for traders. Powered by <span className="text-blue-400">Onchain truth.</span>
+            Built for traders. Powered by <span className="text-blue-200">Onchain truth.</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
-            className="mt-4 sm:mt-6 max-w-3xl text-base sm:text-xl text-neutral-200"
+            className="mt-4 sm:mt-6 max-w-3xl text-base sm:text-xl text-blue-50"
           >
             Every number in VWATCH is read directly from Sui testnet. No mock data. No interpolation. The protocol speaks; the terminal listens.
           </motion.p>
-          <div className="mt-10 sm:mt-14 grid grid-cols-1 gap-5 md:grid-cols-3">
-            <Feature index={0} title="Vol Smile Viewer" description="Decodes Predict's SVI parameters (a, b, m, rho, sigma) directly from on-chain events and renders the live implied vol smile per expiry. Click any oracle to focus." />
-            <Feature index={1} title="PLP Risk Dashboard" description="Reads vault balance, PLP supply, total max payout, and utilization directly from the Predict object on-chain. LP NAV per share, computed in real-time." />
-            <Feature index={2} title="Arbitrage Detection" description="Runs Gatheral's butterfly arb-free condition on every smile and checks calendar monotonicity across expiries. Flags violations the protocol itself doesn't surface." />
-          </div>
-          <div className="mt-5 sm:mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-            <Feature index={3} title="Term Structure View" description="Live oracle list sorted by expiry, each showing ATM IV. See contango, backwardation, and skew shifts instantly across all active expiries." />
-            <Feature index={4} title="Surface Explainer" description="Plain-English observations of what a trader should notice right now: crash skew, term structure shape, vault stress, arb violations. Updates live." />
+
+          {/* Five features in a single horizontal row */}
+          <div className="mt-10 sm:mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <FeatureCard index={0} marker="01" title="Vol Smile Viewer" description="Decodes Predict's SVI parameters (a, b, m, ρ, σ) from on-chain events and renders the live implied vol smile per expiry." />
+            <FeatureCard index={1} marker="02" title="PLP Risk Dashboard" description="Reads vault balance, PLP supply, max payout, and utilization directly from the Predict object on-chain." />
+            <FeatureCard index={2} marker="03" title="Arbitrage Detection" description="Runs Gatheral's butterfly arb-free condition on every smile and checks calendar monotonicity across expiries." />
+            <FeatureCard index={3} marker="04" title="Term Structure View" description="Live oracle list sorted by expiry showing ATM IV. See contango, backwardation, and skew shifts instantly." />
+            <FeatureCard index={4} marker="05" title="Surface Explainer" description="Plain-English observations of crash skew, term structure shape, vault stress, and arb violations. Updates live." />
           </div>
         </div>
       </section>
@@ -487,7 +504,9 @@ function BuiltForSection() {
               whileHover={{ y: -6, transition: { duration: 0.2 } }}
               className="rounded-xl border border-neutral-800 bg-neutral-950 p-6 sm:p-8 hover:border-blue-500/60 hover:shadow-[0_0_32px_rgba(37,99,235,0.25)]"
             >
-              <span className="inline-block rounded-full bg-blue-950 border border-blue-800 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-300">{p.label}</span>
+             <span className="inline-block font-mono text-xs uppercase tracking-[0.2em] font-bold text-blue-300 border border-blue-500/40 rounded px-2.5 py-1">
+                / {p.label}
+              </span>
               <h3 className="mt-5 text-2xl font-bold tracking-tight text-white">{p.title}</h3>
               <p className="mt-3 text-base leading-relaxed text-neutral-200">{p.desc}</p>
             </motion.div>
@@ -670,6 +689,25 @@ function Feature({ title, description, index = 0 }: { title: string; description
     >
       <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white">{title}</h3>
       <p className="mt-3 sm:mt-4 text-base sm:text-lg leading-relaxed text-neutral-200">{description}</p>
+    </motion.div>
+  );
+}
+
+function FeatureCard({ marker, title, description, index = 0 }: { marker: string; title: string; description: string; index?: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 60, scale: 0.96 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.7, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      className="rounded-lg border border-neutral-800 bg-neutral-950 p-5 lg:p-6 hover:border-blue-500 hover:shadow-[0_0_28px_rgba(59,130,246,0.35)] transition-all"
+    >
+      <span className="inline-block font-mono text-xs uppercase tracking-[0.2em] font-bold text-blue-300 border border-blue-500/40 rounded px-2 py-0.5">
+        / {marker}
+      </span>
+      <h3 className="mt-5 text-base lg:text-lg font-bold tracking-tight text-white">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-neutral-200">{description}</p>
     </motion.div>
   );
 }
