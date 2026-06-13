@@ -8,6 +8,7 @@ import { OracleList } from "../../components/OracleList";
 import { ArbCheck } from "../../components/ArbCheck";
 import { TermStructureChart } from "../../components/TermStructureChart";
 import { SkewChart } from "../../components/SkewChart";
+import { VolSurface3D } from "../../components/VolSurface3D";
 import { atmIV } from "../../lib/svi";
 import { classifySmile } from "../../lib/classifySmile";
 import { formatTime } from "../../lib/format";
@@ -55,10 +56,7 @@ export default function SurfacePage() {
   const expiryCount = activeWithSvi.length;
 
   const nearestOracle = [...activeWithSvi].sort((a, b) => (a.expiryMs ?? 0) - (b.expiryMs ?? 0))[0];
-  const nearestAtm =
-    nearestOracle && nearestOracle.svi && nearestOracle.forward && nearestOracle.expiryMs
-      ? atmIV(nearestOracle.svi, nearestOracle.forward, (nearestOracle.expiryMs - now) / (365 * 24 * 60 * 60 * 1000))
-      : null;
+  const nearestAtm = nearestOracle && nearestOracle.svi ? atmIV(nearestOracle.svi) : null;
 
   const lastTickTs = recent.length > 0 ? recent[0].ts : null;
 
@@ -109,12 +107,14 @@ export default function SurfacePage() {
 
         {/* Main grid: 3D surface (left, 8 cols) + term/skew stacked (right, 4 cols) */}
         <div className="mt-3 grid grid-cols-12 gap-3">
-          <section className="col-span-12 lg:col-span-8 rounded border border-neutral-800 bg-neutral-900 min-h-[480px]">
+         <section className="col-span-12 lg:col-span-8 rounded border border-neutral-800 bg-neutral-900 min-h-[520px] overflow-hidden">
             <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2">
               <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">3D VOL SURFACE</span>
-              <span className="font-mono text-[10px] text-neutral-600">strike × expiry → IV</span>
+              <span className="font-mono text-[10px] text-neutral-600">strike × expiry → IV (thermal)</span>
             </div>
-            <PlaceholderSlot label="3D surface — next session" sub="strike × expiry axes with IV color-mapped mesh" />
+            <div className="h-[480px]">
+              <VolSurface3D oracles={oracles} now={now} />
+            </div>
           </section>
 
           <aside className="col-span-12 lg:col-span-4 flex flex-col gap-3">
