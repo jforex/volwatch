@@ -110,7 +110,7 @@ const data = useMemo(() => {
                 const min = m as number;
                 return min < 60 ? `${Math.round(min)} min out` : `${(min / 60).toFixed(2)} hours out`;
               }}
-              formatter={(v: number) => [`${v.toFixed(1)}%`, "ATM IV"]}
+              formatter={(v) => [`${(typeof v === "number" ? v : Number(v)).toFixed(1)}%`, "ATM IV"]}
               cursor={{ stroke: "rgb(96, 165, 250)", strokeWidth: 1, strokeDasharray: "3 3" }}
             />
             <Line

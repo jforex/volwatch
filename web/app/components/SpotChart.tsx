@@ -79,7 +79,7 @@ return (
             labelStyle={{ color: "rgb(163, 163, 163)", marginBottom: "4px" }}
             itemStyle={{ color: "rgb(96, 165, 250)", fontWeight: "bold" }}
             labelFormatter={(ts) => formatTime(ts as number)}
-            formatter={(v: number) => [formatUSD(v), "BTC"]}
+            formatter={(v) => [formatUSD(typeof v === "number" ? v : Number(v)), "BTC"]}
             cursor={{ stroke: "rgb(96, 165, 250)", strokeWidth: 1, strokeDasharray: "3 3" }}
           />
           <Area
