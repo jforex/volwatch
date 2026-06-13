@@ -24,7 +24,7 @@ export function SpotChart({ data, height = 256 }: Props) {
 
 if (chartData.length < 2) {
     return (
-      <div className="flex items-center justify-center text-sm text-neutral-500" style={{ height }}>
+      <div className="flex items-center justify-center text-sm text-neutral-300" style={{ height }}>
         Waiting for price data…
       </div>
     );

@@ -45,7 +45,7 @@ const data = useMemo(() => {
 
   if (data.length < 2) {
     return (
-      <div className="flex items-center justify-center text-xs text-neutral-500" style={{ height }}>
+      <div className="flex items-center justify-center text-xs text-neutral-300" style={{ height }}>
         Need at least 2 active oracles to plot term structure.
       </div>
     );
@@ -57,7 +57,7 @@ const data = useMemo(() => {
   const delta = last - first;
   const shape =
     Math.abs(delta) < 1.5
-      ? { label: "FLAT", tone: "text-neutral-400" }
+      ? { label: "FLAT", tone: "text-neutral-200" }
       : delta > 0
         ? { label: "CONTANGO", tone: "text-emerald-400" }
         : { label: "BACKWARDATION", tone: "text-amber-400" };
@@ -65,10 +65,10 @@ const data = useMemo(() => {
   return (
     <div className="flex flex-col" style={{ height }}>
       <div className="px-4 pt-2 pb-1 flex items-baseline justify-between">
-        <span className={`font-mono text-[10px] uppercase tracking-widest font-bold ${shape.tone}`}>
+        <span className={`font-mono text-xs uppercase tracking-widest font-bold ${shape.tone}`}>
           {shape.label}
         </span>
-        <span className="font-mono text-[10px] text-neutral-500">
+        <span className="font-mono text-xs text-neutral-300">
           {data.length} expiries · Δ {delta >= 0 ? "+" : ""}{delta.toFixed(1)}%
         </span>
       </div>

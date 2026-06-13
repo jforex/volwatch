@@ -65,7 +65,7 @@ const { data, shape, nearestExpiryMs, atm } = useMemo(() => {
 
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center text-xs text-neutral-500" style={{ height }}>
+      <div className="flex items-center justify-center text-xs text-neutral-300" style={{ height }}>
         No active oracle to plot skew.
       </div>
     );
@@ -78,15 +78,15 @@ const { data, shape, nearestExpiryMs, atm } = useMemo(() => {
     shape?.tone === "red" ? "text-red-400" :
     shape?.tone === "emerald" ? "text-emerald-400" :
     shape?.tone === "amber" ? "text-amber-400" :
-    "text-neutral-400";
+    "text-neutral-200";
 
 return (
     <div className="flex flex-col" style={{ height }}>
       <div className="px-4 pt-2 pb-1 flex items-baseline justify-between shrink-0">
-        <span className={`font-mono text-[10px] uppercase tracking-widest font-bold ${toneClass}`}>
+        <span className={`font-mono text-xs uppercase tracking-widest font-bold ${toneClass}`}>
           {shape?.label}{shape?.variant ? ` (${shape.variant})` : ""}
         </span>
-        <span className="font-mono text-[10px] text-neutral-500">
+        <span className="font-mono text-xs text-neutral-300">
           {expiryLabel} · ATM {atm?.toFixed(1)}%
         </span>
       </div>

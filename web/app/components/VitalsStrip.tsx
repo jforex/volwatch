@@ -14,7 +14,7 @@ export function VitalsStrip({ oracles, vault }: Props) {
       <div className="mb-4 flex items-baseline justify-between">
         <div>
           <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-700">Market vitals</h2>
-          <p className="mt-1 text-xs text-neutral-500">At-a-glance status. Read the bars.</p>
+          <p className="mt-1 text-xs text-neutral-300">At-a-glance status. Read the bars.</p>
         </div>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -28,12 +28,12 @@ function VitalCard({ v }: { v: Vital }) {
   const palette = paletteFor(v.level);
   return (
     <div className={`rounded-lg border ${palette.border} ${palette.bg} p-3 sm:p-4`}>
-      <p className="text-xs uppercase tracking-wider text-neutral-500 font-semibold">{v.label}</p>
+      <p className="text-xs uppercase tracking-wider text-neutral-300 font-semibold">{v.label}</p>
       <p className={`mt-1.5 sm:mt-2 text-base sm:text-lg font-bold ${palette.statusText}`}>{v.status}</p>
       <div className="mt-2 sm:mt-3 h-2 w-full overflow-hidden rounded-full bg-neutral-200">
         <div className={`h-full ${palette.bar} transition-all`} style={{ width: `${Math.max(4, v.score)}%` }} />
       </div>
-      <p className="mt-2 sm:mt-3 text-xs leading-relaxed text-neutral-600">{v.detail}</p>
+      <p className="mt-2 sm:mt-3 text-xs leading-relaxed text-neutral-200">{v.detail}</p>
     </div>
   );
 }

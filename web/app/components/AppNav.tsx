@@ -37,7 +37,7 @@ export function AppNav() {
                   key={link.href}
                   href={link.href}
                   className={`relative px-3 py-2 sm:px-4 text-sm sm:text-base font-semibold whitespace-nowrap transition-colors ${
-                    active ? "text-white" : "text-neutral-400 hover:text-white"
+                    active ? "text-white" : "text-neutral-200 hover:text-white"
                   }`}
                 >
                   {link.label}
@@ -59,7 +59,7 @@ export function AppNav() {
           <span className="text-xs sm:text-sm font-semibold text-neutral-300">
             {status === "open" ? "Live" : status === "connecting" ? "Connecting…" : "Disconnected"}
           </span>
-          <span className="hidden md:inline text-xs uppercase tracking-widest text-neutral-500 font-semibold ml-2 border-l border-neutral-800 pl-3">
+          <span className="hidden md:inline text-xs uppercase tracking-widest text-neutral-300 font-semibold ml-2 border-l border-neutral-800 pl-3">
             Sui testnet
           </span>
         </div>

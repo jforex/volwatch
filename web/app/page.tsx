@@ -22,7 +22,7 @@ export default function Landing() {
           <span className="font-[family-name:var(--font-space-grotesk)] text-lg sm:text-xl font-bold tracking-tight text-white">VWATCH</span>
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
-          <a href="https://github.com/jforex/volwatch" target="_blank" rel="noreferrer" className="hidden sm:inline text-base font-medium text-neutral-400 hover:text-white transition-colors">GitHub</a>
+          <a href="https://github.com/jforex/volwatch" target="_blank" rel="noreferrer" className="hidden sm:inline text-base font-medium text-neutral-200 hover:text-white transition-colors">GitHub</a>
           <Link href="/app" className="rounded-md bg-blue-600 px-4 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-base font-bold text-white hover:bg-blue-500 hover:shadow-[0_0_24px_rgba(37,99,235,0.5)] active:scale-[0.98] transition-all shadow-[0_0_16px_rgba(37,99,235,0.35)]">Open Terminal</Link>
         </div>
       </nav>
@@ -33,7 +33,7 @@ export default function Landing() {
             <h1 className="mt-6 sm:mt-8 text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-white">
               <TypingHeadline />
             </h1>
-            <p className="mt-6 sm:mt-8 text-base sm:text-xl leading-relaxed text-neutral-400">
+            <p className="mt-6 sm:mt-8 text-base sm:text-xl leading-relaxed text-neutral-200">
               VWATCH is the real-time volatility terminal for DeepBook Predict. Live smile curves, Onchain PLP vault risk, arbitrage detection, and AI-readable explanations decoded from real Sui events.
             </p>
             <div className="mt-8 sm:mt-10 flex flex-wrap gap-3 sm:gap-4">
@@ -70,7 +70,7 @@ export default function Landing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
-            className="mt-4 sm:mt-6 max-w-3xl text-base sm:text-xl text-neutral-400"
+            className="mt-4 sm:mt-6 max-w-3xl text-base sm:text-xl text-neutral-200"
           >
             Every number in VWATCH is read directly from Sui testnet. No mock data. No interpolation. The protocol speaks; the terminal listens.
           </motion.p>
@@ -149,19 +149,19 @@ export default function Landing() {
 
             <div className="mt-16 sm:mt-20 pt-8 border-t border-neutral-800 grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
               <div>
-                <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">Network</p>
+                <p className="font-mono text-xs uppercase tracking-widest text-neutral-300">Network</p>
                 <p className="mt-1 font-mono text-sm sm:text-base text-white">Sui Testnet</p>
               </div>
               <div>
-                <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">Protocol</p>
+                <p className="font-mono text-xs uppercase tracking-widest text-neutral-300">Protocol</p>
                 <p className="mt-1 font-mono text-sm sm:text-base text-white">DeepBook Predict</p>
               </div>
               <div>
-                <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">Asset</p>
+                <p className="font-mono text-xs uppercase tracking-widest text-neutral-300">Asset</p>
                 <p className="mt-1 font-mono text-sm sm:text-base text-white">BTC-USD</p>
               </div>
               <div>
-                <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">Status</p>
+                <p className="font-mono text-xs uppercase tracking-widest text-neutral-300">Status</p>
                 <p className="mt-1 font-mono text-sm sm:text-base text-emerald-400 flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                   Live
@@ -181,7 +181,7 @@ export default function Landing() {
                   <Image src="/logo.png" alt="VWATCH" width={40} height={40} className="object-contain rounded" />
                   <span className="font-[family-name:var(--font-space-grotesk)] text-2xl font-bold tracking-tight text-white">VWATCH</span>
                 </div>
-                <p className="mt-4 text-base text-neutral-400 leading-relaxed max-w-sm">
+                <p className="mt-4 text-base text-neutral-200 leading-relaxed max-w-sm">
                   Real-time volatility terminal for DeepBook Predict. Sees from far. Sharper than the rest.
                 </p>
                 <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5">
@@ -193,18 +193,18 @@ export default function Landing() {
               <div className="md:col-span-2">
                 <p className="text-xs font-bold uppercase tracking-widest text-white mb-4">Product</p>
                 <ul className="space-y-3 text-sm">
-                  <li><Link href="/app" className="text-neutral-400 hover:text-white transition-colors">Open Terminal</Link></li>
-                  <li><a href="https://github.com/jforex/volwatch" target="_blank" rel="noreferrer" className="text-neutral-400 hover:text-white transition-colors">Source code</a></li>
-                  <li><a href="https://github.com/jforex/volwatch#readme" target="_blank" rel="noreferrer" className="text-neutral-400 hover:text-white transition-colors">Documentation</a></li>
+                  <li><Link href="/app" className="text-neutral-200 hover:text-white transition-colors">Open Terminal</Link></li>
+                  <li><a href="https://github.com/jforex/volwatch" target="_blank" rel="noreferrer" className="text-neutral-200 hover:text-white transition-colors">Source code</a></li>
+                  <li><a href="https://github.com/jforex/volwatch#readme" target="_blank" rel="noreferrer" className="text-neutral-200 hover:text-white transition-colors">Documentation</a></li>
                 </ul>
               </div>
 
               <div className="md:col-span-2">
                 <p className="text-xs font-bold uppercase tracking-widest text-white mb-4">Ecosystem</p>
                 <ul className="space-y-3 text-sm">
-                  <li><a href="https://sui.io" target="_blank" rel="noreferrer" className="text-neutral-400 hover:text-white transition-colors">Sui</a></li>
-                  <li><a href="https://docs.sui.io/onchain-finance/deepbook-predict/" target="_blank" rel="noreferrer" className="text-neutral-400 hover:text-white transition-colors">DeepBook Predict</a></li>
-                  <li><a href="https://sui.io/overflow" target="_blank" rel="noreferrer" className="text-neutral-400 hover:text-white transition-colors">Sui Overflow 2026</a></li>
+                  <li><a href="https://sui.io" target="_blank" rel="noreferrer" className="text-neutral-200 hover:text-white transition-colors">Sui</a></li>
+                  <li><a href="https://docs.sui.io/onchain-finance/deepbook-predict/" target="_blank" rel="noreferrer" className="text-neutral-200 hover:text-white transition-colors">DeepBook Predict</a></li>
+                  <li><a href="https://sui.io/overflow" target="_blank" rel="noreferrer" className="text-neutral-200 hover:text-white transition-colors">Sui Overflow 2026</a></li>
                 </ul>
               </div>
 
@@ -224,12 +224,12 @@ export default function Landing() {
             </div>
 
             <div className="mt-12 sm:mt-16 pt-8 border-t border-neutral-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-neutral-400">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-neutral-200">
                 <span>© 2026 VWATCH</span>
                 <span className="hidden sm:inline">·</span>
                 <span>No data stored. No login. No mock prices.</span>
               </div>
-              <div className="text-xs font-mono text-neutral-400">
+              <div className="text-xs font-mono text-neutral-200">
                 v0.2.0 · built for Sui Overflow 2026
               </div>
             </div>
@@ -282,7 +282,7 @@ function LivePreview() {
               <span className="h-3 w-3 rounded-full bg-yellow-400" />
               <span className="h-3 w-3 rounded-full bg-green-400" />
             </div>
-            <span className="ml-3 font-mono text-xs text-neutral-400">vwatch.app/app</span>
+            <span className="ml-3 font-mono text-xs text-neutral-200">vwatch.app/app</span>
             <span className="ml-auto flex items-center gap-2 text-xs font-semibold text-emerald-400">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               Live
@@ -299,7 +299,7 @@ function LivePreview() {
                 { label: "Arb", value: "Clean", tone: "emerald" },
               ].map((v, i) => (
                 <div key={i} className="rounded-lg border border-neutral-800 bg-neutral-950 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">{v.label}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-neutral-200">{v.label}</p>
                   <p className={`mt-1 font-mono text-sm sm:text-base font-bold ${
                     v.tone === "amber" ? "text-amber-400" :
                     v.tone === "red" ? "text-red-400" :
@@ -312,7 +312,7 @@ function LivePreview() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-2 rounded-lg border border-neutral-800 bg-neutral-950 p-4">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">BTC Spot</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-neutral-200">BTC Spot</span>
                   <span className="font-mono text-lg font-bold text-white">$108,450</span>
                 </div>
                 <svg viewBox="0 0 400 80" className="w-full h-16">
@@ -329,7 +329,7 @@ function LivePreview() {
                 </svg>
               </div>
               <div className="rounded-lg border border-neutral-800 bg-neutral-950 p-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Vol Smile</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-neutral-200">Vol Smile</span>
                 <svg viewBox="0 0 200 80" className="w-full h-16 mt-3">
                   <motion.path
                     d="M 10 30 Q 50 55, 100 50 Q 150 45, 190 25"
@@ -354,7 +354,7 @@ function LivePreview() {
 
             <div className="mt-4 rounded-lg border border-neutral-800 bg-neutral-950 overflow-hidden">
               <div className="px-4 py-2 bg-neutral-900 border-b border-neutral-800">
-                <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Live event tape</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-neutral-200">Live event tape</span>
               </div>
               <div className="divide-y divide-neutral-800 font-mono text-xs">
                 {[
@@ -370,11 +370,11 @@ function LivePreview() {
                     transition={{ duration: 0.4, delay: 0.2 + i * 0.12, ease: "easeOut" }}
                     className="flex items-center gap-3 px-4 py-2"
                   >
-                    <span className={`w-14 rounded border px-1 py-0.5 text-center text-[9px] font-bold uppercase tracking-wider ${
+                    <span className={`w-14 rounded border px-1 py-0.5 text-center text-xs font-bold uppercase tracking-wider ${
                       e.kind === "prices" ? "bg-sky-950 text-sky-300 border-sky-800" :
                       "bg-blue-950 text-blue-300 border-blue-800"
                     }`}>{e.kind}</span>
-                    <span className="text-neutral-500">{e.id}</span>
+                    <span className="text-neutral-300">{e.id}</span>
                     <span className="ml-auto font-semibold text-white">{e.detail}</span>
                   </motion.div>
                 ))}
@@ -433,7 +433,7 @@ function HowItWorks() {
             >
               <p aria-hidden className="font-[family-name:var(--font-space-grotesk)] text-6xl sm:text-7xl font-bold text-blue-500/40 leading-none">{step.num}</p>
               <h3 className="mt-4 text-2xl font-bold tracking-tight text-white">{step.title}</h3>
-              <p className="mt-3 text-base leading-relaxed text-neutral-400">{step.desc}</p>
+              <p className="mt-3 text-base leading-relaxed text-neutral-200">{step.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -489,7 +489,7 @@ function BuiltForSection() {
             >
               <span className="inline-block rounded-full bg-blue-950 border border-blue-800 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-300">{p.label}</span>
               <h3 className="mt-5 text-2xl font-bold tracking-tight text-white">{p.title}</h3>
-              <p className="mt-3 text-base leading-relaxed text-neutral-400">{p.desc}</p>
+              <p className="mt-3 text-base leading-relaxed text-neutral-200">{p.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -519,7 +519,7 @@ function StatsBand() {
               className="text-center"
             >
               <p className="font-[family-name:var(--font-space-grotesk)] text-5xl sm:text-6xl lg:text-7xl font-bold text-blue-400">{s.num}</p>
-              <p className="mt-2 sm:mt-4 text-sm sm:text-base font-semibold uppercase tracking-wider text-neutral-400">{s.label}</p>
+              <p className="mt-2 sm:mt-4 text-sm sm:text-base font-semibold uppercase tracking-wider text-neutral-200">{s.label}</p>
             </motion.div>
           ))}
         </div>
@@ -652,7 +652,7 @@ function EagleHero() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs sm:text-sm uppercase tracking-wider text-neutral-400 font-semibold">{label}</p>
+      <p className="text-xs sm:text-sm uppercase tracking-wider text-neutral-200 font-semibold">{label}</p>
       <p className="mt-1 sm:mt-2 font-mono text-lg sm:text-2xl font-bold text-white">{value}</p>
     </div>
   );
@@ -669,7 +669,7 @@ function Feature({ title, description, index = 0 }: { title: string; description
       className="rounded-xl border border-neutral-800 bg-neutral-950 p-6 sm:p-8 hover:border-blue-500/60 hover:shadow-[0_0_32px_rgba(37,99,235,0.25)]"
     >
       <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white">{title}</h3>
-      <p className="mt-3 sm:mt-4 text-base sm:text-lg leading-relaxed text-neutral-400">{description}</p>
+      <p className="mt-3 sm:mt-4 text-base sm:text-lg leading-relaxed text-neutral-200">{description}</p>
     </motion.div>
   );
 }

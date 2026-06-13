@@ -7,7 +7,7 @@ import { formatTime, formatUSD } from "../lib/format";
 export function SpotSparkline({ data }: { data: SpotPoint[] }) {
   if (data.length < 2) {
     return (
-      <div className="flex h-32 items-center justify-center text-sm text-neutral-500">
+      <div className="flex h-32 items-center justify-center text-sm text-neutral-300">
         Collecting price history…
       </div>
     );

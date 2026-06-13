@@ -6,7 +6,7 @@ import { formatUSD } from "../lib/format";
 export function PLPDashboard({ vault }: { vault: VaultSnapshot | null }) {
   if (!vault) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-6 sm:p-8 text-center text-sm text-neutral-500 shadow-sm">
+      <div className="rounded-xl border border-neutral-200 bg-white p-6 sm:p-8 text-center text-sm text-neutral-300 shadow-sm">
         Loading vault state…
       </div>
     );
@@ -21,7 +21,7 @@ export function PLPDashboard({ vault }: { vault: VaultSnapshot | null }) {
       <div className="mb-4 sm:mb-5 flex items-start sm:items-baseline justify-between gap-3">
         <div>
           <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-700">PLP vault · risk</h2>
-          <p className="mt-1 text-xs text-neutral-500">On-chain · refreshed every 10s</p>
+          <p className="mt-1 text-xs text-neutral-300">On-chain · refreshed every 10s</p>
         </div>
         <div className="flex items-center gap-2 text-xs sm:text-sm shrink-0">
           {vault.tradingPaused ? (
@@ -54,7 +54,7 @@ export function PLPDashboard({ vault }: { vault: VaultSnapshot | null }) {
         <div className="mt-2 h-3 sm:h-3.5 w-full overflow-hidden rounded-full bg-neutral-100">
           <div className={`h-full ${utilColor} transition-all`} style={{ width: `${Math.min(100, utilRatio * 100)}%` }} />
         </div>
-        <p className="mt-2 text-xs text-neutral-500">
+        <p className="mt-2 text-xs text-neutral-300">
           Headroom: <span className="font-mono font-bold text-neutral-700">{vault.headroomPct.toFixed(2)}%</span>
         </p>
       </div>
@@ -76,9 +76,9 @@ export function PLPDashboard({ vault }: { vault: VaultSnapshot | null }) {
 function Metric({ label, value, sub, accent = "text-neutral-900" }: { label: string; value: string; sub?: string; accent?: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-xs uppercase tracking-wider text-neutral-500 font-semibold truncate">{label}</p>
+      <p className="text-xs uppercase tracking-wider text-neutral-300 font-semibold truncate">{label}</p>
       <p className={`mt-1 font-mono text-base sm:text-xl font-bold truncate ${accent}`}>{value}</p>
-      {sub && <p className="mt-0.5 text-xs text-neutral-500 truncate">{sub}</p>}
+      {sub && <p className="mt-0.5 text-xs text-neutral-300 truncate">{sub}</p>}
     </div>
   );
 }
@@ -86,9 +86,9 @@ function Metric({ label, value, sub, accent = "text-neutral-900" }: { label: str
 function SubStat({ label, value, hint, accent = "text-neutral-900" }: { label: string; value: string; hint?: string; accent?: string }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-wider text-neutral-500 font-semibold">{label}</p>
+      <p className="text-xs uppercase tracking-wider text-neutral-300 font-semibold">{label}</p>
       <p className={`mt-1 font-mono text-base font-bold ${accent}`}>{value}</p>
-      {hint && <p className="mt-0.5 text-xs text-neutral-500">{hint}</p>}
+      {hint && <p className="mt-0.5 text-xs text-neutral-300">{hint}</p>}
     </div>
   );
 }

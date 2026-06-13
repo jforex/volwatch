@@ -34,32 +34,32 @@ export default function Home() {
     <main className="px-3 sm:px-5 py-3 sm:py-4">
       <div className="mx-auto max-w-[1600px]">
         {/* Status strip */}
-        <div className="flex items-center gap-3 sm:gap-5 overflow-x-auto whitespace-nowrap border border-neutral-800 bg-neutral-900/60 rounded px-3 sm:px-4 py-2 font-mono text-[11px] sm:text-xs">
+        <div className="flex items-center gap-3 sm:gap-5 overflow-x-auto whitespace-nowrap border border-neutral-800 bg-neutral-900/60 rounded px-3 sm:px-4 py-2 font-mono text-xs sm:text-xs">
           <span className="text-blue-400 font-bold">/ HOME</span>
-          <span className="text-neutral-600">·</span>
-          <span className="text-neutral-400">DeepBook Predict</span>
-          <span className="text-neutral-600">·</span>
-          <span className="text-neutral-400">Sui Testnet</span>
-          <span className="text-neutral-600">·</span>
-          <span className="text-neutral-400">BTC-USD</span>
-          <span className="text-neutral-600">·</span>
+          <span className="text-neutral-200">·</span>
+          <span className="text-neutral-200">DeepBook Predict</span>
+          <span className="text-neutral-200">·</span>
+          <span className="text-neutral-200">Sui Testnet</span>
+          <span className="text-neutral-200">·</span>
+          <span className="text-neutral-200">BTC-USD</span>
+          <span className="text-neutral-200">·</span>
           <span className={status === "open" ? "text-emerald-400" : "text-amber-400"}>
             {status === "open" ? "● LIVE" : status === "connecting" ? "○ CONNECTING" : "○ OFFLINE"}
           </span>
-          <span className="text-neutral-600">·</span>
-          <span className="text-neutral-400">
+          <span className="text-neutral-200">·</span>
+          <span className="text-neutral-200">
             LAST <span className="text-white">{lastTickTs ? formatTime(lastTickTs) : "—"}</span>
           </span>
-          <span className="text-neutral-600">·</span>
-          <span className="text-neutral-400">
+          <span className="text-neutral-200">·</span>
+          <span className="text-neutral-200">
             ORACLES <span className="text-white">{oracleCount}</span>
           </span>
-          <span className="text-neutral-600">·</span>
-          <span className="text-neutral-400">
+          <span className="text-neutral-200">·</span>
+          <span className="text-neutral-200">
             ATM <span className="text-white">{atm !== null ? `${(atm * 100).toFixed(1)}%` : "—"}</span>
           </span>
-          <span className="text-neutral-600">·</span>
-          <span className="text-neutral-400">
+          <span className="text-neutral-200">·</span>
+          <span className="text-neutral-200">
             UTIL <span className="text-white">{util !== null ? `${util.toFixed(1)}%` : "—"}</span>
           </span>
         </div>
@@ -73,8 +73,8 @@ export default function Home() {
           <section className="col-span-12 lg:col-span-8 rounded border border-neutral-800 bg-neutral-900">
             <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2">
               <div className="flex items-center gap-3">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">BTC SPOT</span>
-                <span className="font-mono text-xs text-neutral-600">{spotHistory.length} ticks</span>
+                <span className="font-mono text-xs uppercase tracking-widest text-neutral-300">BTC SPOT</span>
+                <span className="font-mono text-xs text-neutral-200">{spotHistory.length} ticks</span>
               </div>
               <div className="flex items-baseline gap-3">
                 <span className="font-mono text-lg sm:text-2xl font-bold text-white">
@@ -127,18 +127,18 @@ export default function Home() {
         {/* Event tape — full width */}
         <section className="mt-3 rounded border border-neutral-800 bg-neutral-900">
           <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">EVENT TAPE</span>
-            <span className="font-mono text-xs text-neutral-600">latest 10</span>
+            <span className="font-mono text-xs uppercase tracking-widest text-neutral-300">EVENT TAPE</span>
+            <span className="font-mono text-xs text-neutral-200">latest 10</span>
           </div>
           {recent.length === 0 ? (
-            <div className="p-6 text-center font-mono text-xs text-neutral-500">Waiting for events…</div>
+            <div className="p-6 text-center font-mono text-xs text-neutral-300">Waiting for events…</div>
           ) : (
-            <ul className="font-mono text-[11px] sm:text-xs">
+            <ul className="font-mono text-xs sm:text-xs">
               {recent.slice(0, 10).map((e, i) => (
                 <li key={i} className="flex items-center gap-3 sm:gap-4 border-b border-neutral-800/60 last:border-b-0 px-4 py-1.5 hover:bg-neutral-800/40">
-                  <span className="w-16 text-neutral-500 shrink-0 hidden sm:inline">{formatTime(e.ts)}</span>
+                  <span className="w-16 text-neutral-300 shrink-0 hidden sm:inline">{formatTime(e.ts)}</span>
                   <EventBadge kind={e.kind} />
-                  <span className="text-neutral-500 truncate min-w-0">{shortId(e.oracleId)}</span>
+                  <span className="text-neutral-300 truncate min-w-0">{shortId(e.oracleId)}</span>
                   <span className="ml-auto text-white shrink-0">{renderDetail(e)}</span>
                 </li>
               ))}
@@ -153,7 +153,7 @@ export default function Home() {
 function DenseCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="px-3 sm:px-4 py-2 sm:py-3">
-      <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-neutral-500 font-bold">{label}</p>
+      <p className="font-mono text-xs sm:text-xs uppercase tracking-widest text-neutral-300 font-bold">{label}</p>
       <p className="mt-0.5 font-mono text-sm sm:text-base font-bold text-white">{value}</p>
     </div>
   );
@@ -167,9 +167,9 @@ function DensePanel({ label, value, sub, accent }: { label: string; value: strin
     : "text-white";
   return (
     <div className="rounded border border-neutral-800 bg-neutral-900 px-3 sm:px-4 py-2 sm:py-3">
-      <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-neutral-500 font-bold">{label}</p>
+      <p className="font-mono text-xs sm:text-xs uppercase tracking-widest text-neutral-300 font-bold">{label}</p>
       <p className={`mt-1 font-mono text-lg sm:text-xl font-bold ${accentClass}`}>{value}</p>
-      {sub && <p className="mt-0.5 font-mono text-[10px] text-neutral-600 truncate">{sub}</p>}
+      {sub && <p className="mt-0.5 font-mono text-xs text-neutral-200 truncate">{sub}</p>}
     </div>
   );
 }
@@ -182,7 +182,7 @@ function EventBadge({ kind }: { kind: string }) {
     settled: "bg-neutral-800 text-neutral-300 border-neutral-700",
   };
   return (
-    <span className={`w-14 sm:w-16 rounded border px-1 py-0.5 text-center text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shrink-0 ${styles[kind] ?? styles.settled}`}>
+    <span className={`w-14 sm:w-16 rounded border px-1 py-0.5 text-center text-xs sm:text-xs font-bold uppercase tracking-wider shrink-0 ${styles[kind] ?? styles.settled}`}>
       {kind}
     </span>
   );
@@ -193,7 +193,7 @@ function renderDetail(e: { kind: string; spot?: number; a?: string; expiryMs?: n
     return <span>spot <span className="text-blue-400">{formatUSD(e.spot)}</span></span>;
   }
   if (e.kind === "svi" && e.a !== undefined) {
-    return <span className="text-neutral-400 truncate">a={e.a}</span>;
+    return <span className="text-neutral-200 truncate">a={e.a}</span>;
   }
   if (e.kind === "activated" && e.expiryMs !== undefined) {
     return <span className="text-emerald-400">exp {new Date(e.expiryMs).toLocaleTimeString()}</span>;
@@ -223,7 +223,7 @@ function InsightsPanel({
   if (top.length === 0) {
     return (
       <div className="mt-3 rounded border border-neutral-800 bg-neutral-900/40 px-4 py-3">
-        <p className="font-mono text-[11px] text-neutral-500">Quiet surface — nothing notable to flag yet.</p>
+        <p className="font-mono text-xs text-neutral-300">Quiet surface — nothing notable to flag yet.</p>
       </div>
     );
   }
@@ -231,8 +231,8 @@ function InsightsPanel({
   return (
     <div className="mt-3 rounded border border-neutral-800 bg-neutral-900/40">
       <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">/ READ-OUT</span>
-        <span className="font-mono text-[10px] text-neutral-600">{observations.length} signal{observations.length === 1 ? "" : "s"} · plain English</span>
+        <span className="font-mono text-xs uppercase tracking-widest text-neutral-300">/ READ-OUT</span>
+        <span className="font-mono text-xs text-neutral-200">{observations.length} signal{observations.length === 1 ? "" : "s"} · plain English</span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-neutral-800">
         {top.map((o, i) => (
@@ -248,17 +248,17 @@ function InsightCell({ obs }: { obs: { severity: "info" | "notable" | "warning" 
     obs.severity === "alert" ? { dot: "bg-red-500", label: "text-red-400" } :
     obs.severity === "warning" ? { dot: "bg-amber-500", label: "text-amber-400" } :
     obs.severity === "notable" ? { dot: "bg-blue-500", label: "text-blue-400" } :
-    { dot: "bg-neutral-500", label: "text-neutral-400" };
+    { dot: "bg-neutral-500", label: "text-neutral-200" };
   return (
     <div className="px-4 py-3">
       <div className="flex items-center gap-2">
         <span className={`h-1.5 w-1.5 rounded-full ${tone.dot}`} />
-        <span className={`font-mono text-[9px] uppercase tracking-widest font-bold ${tone.label}`}>
+        <span className={`font-mono text-xs uppercase tracking-widest font-bold ${tone.label}`}>
           {obs.severity}
         </span>
       </div>
       <p className="mt-1.5 font-semibold text-sm text-white leading-snug">{obs.title}</p>
-      <p className="mt-1 text-xs text-neutral-400 leading-relaxed">{obs.detail}</p>
+      <p className="mt-1 text-xs text-neutral-200 leading-relaxed">{obs.detail}</p>
     </div>
   );
 }

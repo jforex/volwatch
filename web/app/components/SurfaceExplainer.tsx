@@ -18,13 +18,13 @@ export function SurfaceExplainer({ oracles, vault, latestSpot }: Props) {
       <div className="mb-4 flex items-baseline justify-between">
         <div>
           <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-700">Surface explainer</h2>
-          <p className="mt-1 text-xs text-neutral-500">What a trader should notice right now</p>
+          <p className="mt-1 text-xs text-neutral-300">What a trader should notice right now</p>
         </div>
-        <span className="text-xs text-neutral-500">{observations.length} observation{observations.length === 1 ? "" : "s"}</span>
+        <span className="text-xs text-neutral-300">{observations.length} observation{observations.length === 1 ? "" : "s"}</span>
       </div>
 
       {observations.length === 0 ? (
-        <div className="py-6 text-center text-sm text-neutral-500">Quiet surface. Nothing notable.</div>
+        <div className="py-6 text-center text-sm text-neutral-300">Quiet surface. Nothing notable.</div>
       ) : (
         <ul className="space-y-3">
           {observations.map((o, i) => (<ObservationRow key={i} o={o} />))}
@@ -60,7 +60,7 @@ function iconFor(s: Observation["severity"]) {
 
 function paletteFor(s: Observation["severity"]) {
   switch (s) {
-    case "info": return { border: "border-neutral-200", bg: "bg-neutral-50", icon: "text-neutral-500", title: "text-neutral-900" };
+    case "info": return { border: "border-neutral-200", bg: "bg-neutral-50", icon: "text-neutral-300", title: "text-neutral-900" };
     case "notable": return { border: "border-sky-200", bg: "bg-sky-50", icon: "text-sky-700", title: "text-sky-900" };
     case "warning": return { border: "border-amber-200", bg: "bg-amber-50", icon: "text-amber-700", title: "text-amber-900" };
     case "alert": return { border: "border-red-200", bg: "bg-red-50", icon: "text-red-700", title: "text-red-900" };

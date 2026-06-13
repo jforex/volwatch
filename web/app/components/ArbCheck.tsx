@@ -27,7 +27,7 @@ export function ArbCheck({ oracles }: Props) {
 
   if (stats.total === 0) {
     return (
-      <div className="rounded border border-neutral-800 bg-neutral-900 p-6 text-center font-mono text-xs text-neutral-500">
+      <div className="rounded border border-neutral-800 bg-neutral-900 p-6 text-center font-mono text-xs text-neutral-300">
         Waiting for oracle data to run arb checks…
       </div>
     );
@@ -70,14 +70,14 @@ export function ArbCheck({ oracles }: Props) {
           <div className="flex items-center gap-3 min-w-0">
             <SeverityIcon severity={overallSeverity} large />
             <div className="min-w-0">
-              <p className={`font-mono text-[11px] sm:text-xs uppercase tracking-widest font-bold ${
+              <p className={`font-mono text-xs sm:text-xs uppercase tracking-widest font-bold ${
                 overallSeverity === "violation" ? "text-red-300" :
                 overallSeverity === "warn" ? "text-amber-300" :
                 "text-emerald-300"
               }`}>
                 {bannerHeadline}
               </p>
-              <p className="mt-0.5 text-[11px] sm:text-xs text-neutral-400 truncate">{bannerSub}</p>
+              <p className="mt-0.5 text-xs sm:text-xs text-neutral-200 truncate">{bannerSub}</p>
             </div>
           </div>
           <SeverityBadge severity={overallSeverity} />
@@ -105,8 +105,8 @@ export function ArbCheck({ oracles }: Props) {
       {/* Butterfly results */}
       <div className="rounded border border-neutral-800 bg-neutral-900/60">
         <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">BUTTERFLY RESULTS</span>
-          <span className="font-mono text-[10px] text-neutral-600">per-expiry · Gatheral g(k) ≥ 0</span>
+          <span className="font-mono text-xs uppercase tracking-widest text-neutral-300">BUTTERFLY RESULTS</span>
+          <span className="font-mono text-xs text-neutral-200">per-expiry · Gatheral g(k) ≥ 0</span>
         </div>
         <ul className="divide-y divide-neutral-800/60 font-mono text-xs">
           {butterflies.slice(0, 8).map((b) => (
@@ -114,7 +114,7 @@ export function ArbCheck({ oracles }: Props) {
           ))}
         </ul>
         {butterflies.length > 8 && (
-          <p className="border-t border-neutral-800 px-4 py-2 font-mono text-[10px] text-neutral-600">+{butterflies.length - 8} more</p>
+          <p className="border-t border-neutral-800 px-4 py-2 font-mono text-xs text-neutral-200">+{butterflies.length - 8} more</p>
         )}
       </div>
 
@@ -122,14 +122,14 @@ export function ArbCheck({ oracles }: Props) {
       {calendars.length > 0 && (
         <div className="rounded border border-neutral-800 bg-neutral-900/60">
           <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">CALENDAR PAIRS</span>
-            <span className="font-mono text-[10px] text-neutral-600">adjacent expiries · w(long) ≥ w(short)</span>
+            <span className="font-mono text-xs uppercase tracking-widest text-neutral-300">CALENDAR PAIRS</span>
+            <span className="font-mono text-xs text-neutral-200">adjacent expiries · w(long) ≥ w(short)</span>
           </div>
           <ul className="divide-y divide-neutral-800/60 font-mono text-xs">
             {calendars.slice(0, 6).map((c, i) => (<CalendarRow key={i} pair={c} />))}
           </ul>
           {calendars.length > 6 && (
-            <p className="border-t border-neutral-800 px-4 py-2 font-mono text-[10px] text-neutral-600">+{calendars.length - 6} more</p>
+            <p className="border-t border-neutral-800 px-4 py-2 font-mono text-xs text-neutral-200">+{calendars.length - 6} more</p>
           )}
         </div>
       )}
@@ -149,20 +149,20 @@ function SeverityIcon({ severity, large = false }: { severity: "ok" | "warn" | "
 function SeverityBadge({ severity }: { severity: "ok" | "warn" | "violation" }) {
   if (severity === "violation") {
     return (
-      <span className="shrink-0 rounded border border-red-500/40 bg-red-950/60 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-red-300 font-bold">
+      <span className="shrink-0 rounded border border-red-500/40 bg-red-950/60 px-2.5 py-1 font-mono text-xs uppercase tracking-widest text-red-300 font-bold">
         ✗ violations
       </span>
     );
   }
   if (severity === "warn") {
     return (
-      <span className="shrink-0 rounded border border-amber-500/40 bg-amber-950/60 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-amber-300 font-bold">
+      <span className="shrink-0 rounded border border-amber-500/40 bg-amber-950/60 px-2.5 py-1 font-mono text-xs uppercase tracking-widest text-amber-300 font-bold">
         ⚠ marginal
       </span>
     );
   }
   return (
-    <span className="shrink-0 rounded border border-emerald-500/30 bg-emerald-950/60 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-emerald-300 font-bold">
+    <span className="shrink-0 rounded border border-emerald-500/30 bg-emerald-950/60 px-2.5 py-1 font-mono text-xs uppercase tracking-widest text-emerald-300 font-bold">
       ✓ arb-free
     </span>
   );
@@ -171,8 +171,8 @@ function SeverityBadge({ severity }: { severity: "ok" | "warn" | "violation" }) 
 function Summary({ title, subtitle, passed, warns, violations }: { title: string; subtitle: string; passed: number; warns: number; violations: number }) {
   return (
     <div className="rounded border border-neutral-800 bg-neutral-900/60 px-4 py-3">
-      <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 font-bold">{title}</p>
-      <p className="mt-0.5 font-mono text-[10px] text-neutral-600">{subtitle}</p>
+      <p className="font-mono text-xs uppercase tracking-widest text-neutral-300 font-bold">{title}</p>
+      <p className="mt-0.5 font-mono text-xs text-neutral-200">{subtitle}</p>
       <div className="mt-2 flex gap-3 sm:gap-4 font-mono text-xs font-bold">
         <span className="text-emerald-400">✓ {passed}</span>
         {warns > 0 && <span className="text-amber-400">⚠ {warns}</span>}
@@ -193,8 +193,8 @@ function ButterflyRow({ oracleId, expiryMs, check }: { oracleId: string; expiryM
     <li className="flex items-center gap-3 px-4 py-2 hover:bg-neutral-800/40">
       <span className={`w-4 font-bold shrink-0 ${tone}`}>{icon}</span>
       <span className="text-neutral-300 shrink-0">{shortId(oracleId)}</span>
-      <span className="text-[10px] text-neutral-500 shrink-0">in {minsToExpiry}m</span>
-      <span className="ml-auto text-neutral-400 truncate">
+      <span className="text-xs text-neutral-300 shrink-0">in {minsToExpiry}m</span>
+      <span className="ml-auto text-neutral-200 truncate">
         min g = <span className={`${tone} font-bold`}>{check.minG.toFixed(4)}</span>
       </span>
     </li>
@@ -215,8 +215,8 @@ function CalendarRow({ pair }: { pair: CalendarPair }) {
       <span className="text-neutral-300 shrink-0">
         {shortId(pair.shortOracleId)} → {shortId(pair.longOracleId)}
       </span>
-      <span className="text-[10px] text-neutral-500 shrink-0">{shortMins}m → {longMins}m</span>
-      <span className="ml-auto text-neutral-400 truncate">
+      <span className="text-xs text-neutral-300 shrink-0">{shortMins}m → {longMins}m</span>
+      <span className="ml-auto text-neutral-200 truncate">
         Δw = <span className={`${tone} font-bold`}>{(pair.worstLongTotalVar - pair.worstShortTotalVar).toFixed(5)}</span>
       </span>
     </li>

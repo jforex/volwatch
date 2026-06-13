@@ -39,42 +39,47 @@ export function OracleList({ oracles, selectedId, onSelect }: Props) {
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-6 text-center text-sm text-neutral-500 shadow-sm">
+      <div className="text-center font-mono text-xs text-neutral-300 py-8">
         Waiting for active oracles…
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm">
-      <div className="border-b border-neutral-200 px-5 py-4">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-700">Active oracles</h2>
-        <p className="mt-1 text-xs text-neutral-500">{rows.length} live · sorted by expiry · click to focus</p>
-      </div>
-      <ul className="divide-y divide-neutral-200 font-mono text-sm">
-        {rows.map((r) => {
-          const isSelected = r.oracleId === selectedId;
-          return (
-            <li key={r.oracleId}>
-              <button
-                onClick={() => onSelect(r.oracleId)}
-                className={`flex w-full items-center justify-between gap-3 px-5 py-3 text-left transition-colors ${
-                  isSelected ? "bg-indigo-50 ring-2 ring-inset ring-indigo-300" : "hover:bg-neutral-50"
-                }`}
-              >
-                <div className="flex flex-col">
-                  <span className={isSelected ? "text-indigo-700 font-bold" : "text-neutral-900 font-semibold"}>{shortId(r.oracleId)}</span>
-                  <span className="text-xs text-neutral-500 mt-0.5">{r.minsToExpiry !== undefined ? `expires in ${r.minsToExpiry}m` : "no expiry"}</span>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-neutral-900 font-bold">{r.atmIvPct !== undefined ? `${r.atmIvPct.toFixed(1)}%` : "—"}</span>
-                  <span className="text-xs text-neutral-500 mt-0.5">{r.forward !== undefined ? formatUSD(r.forward) : "—"}</span>
-                </div>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <ul className="divide-y divide-neutral-800 font-mono text-xs max-h-[420px] overflow-y-auto">
+      {rows.map((r) => {
+        const isSelected = r.oracleId === selectedId;
+        return (
+          <li key={r.oracleId}>
+            <button
+              onClick={() => onSelect(r.oracleId)}
+              className={`flex w-full items-center justify-between gap-3 px-3 py-3 text-left transition-colors ${
+                isSelected
+                  ? "bg-blue-950/40 border-l-2 border-blue-500"
+                  : "border-l-2 border-transparent hover:bg-neutral-800/50"
+              }`}
+            >
+              <div className="flex flex-col min-w-0">
+                <span className={`truncate ${isSelected ? "text-blue-300 font-bold" : "text-neutral-100 font-semibold"}`}>
+                  {shortId(r.oracleId)}
+                </span>
+                <span className="text-xs text-neutral-300 mt-0.5">
+                  {r.minsToExpiry !== undefined ? `expires in ${r.minsToExpiry}m` : "no expiry"}
+                  {!r.hasFullState && <span className="ml-2 text-amber-400">· no SVI</span>}
+                </span>
+              </div>
+              <div className="flex flex-col items-end shrink-0">
+                <span className={`font-bold ${isSelected ? "text-blue-300" : "text-white"}`}>
+                  {r.atmIvPct !== undefined ? `${r.atmIvPct.toFixed(1)}%` : "—"}
+                </span>
+                <span className="text-xs text-neutral-300 mt-0.5">
+                  {r.forward !== undefined ? formatUSD(r.forward) : "—"}
+                </span>
+              </div>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
