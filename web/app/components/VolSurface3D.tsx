@@ -370,31 +370,25 @@ function Axes({ expiries, now }: { expiries: OracleState[]; now: number }) {
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
-            count={2}
-            array={new Float32Array([-halfW, ground, halfD, halfW, ground, halfD])}
-            itemSize={3}
+            args={[new Float32Array([-halfW, ground, halfD, halfW, ground, halfD]), 3]}
           />
         </bufferGeometry>
         <lineBasicMaterial color="#737373" />
       </line>
       <line>
         <bufferGeometry>
-          <bufferAttribute
+         <bufferAttribute
             attach="attributes-position"
-            count={2}
-            array={new Float32Array([-halfW, ground, -halfD, -halfW, ground, halfD])}
-            itemSize={3}
+            args={[new Float32Array([-halfW, ground, -halfD, -halfW, ground, halfD]), 3]}
           />
         </bufferGeometry>
         <lineBasicMaterial color="#737373" />
       </line>
       <line>
         <bufferGeometry>
-          <bufferAttribute
+         <bufferAttribute
             attach="attributes-position"
-            count={2}
-            array={new Float32Array([-halfW, ground, halfD, -halfW, ground + PLOT_H, halfD])}
-            itemSize={3}
+            args={[new Float32Array([-halfW, ground, halfD, -halfW, ground + PLOT_H, halfD]), 3]}
           />
         </bufferGeometry>
         <lineBasicMaterial color="#737373" />
