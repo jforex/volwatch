@@ -133,9 +133,10 @@ return (
               labelStyle={{ color: "rgb(163, 163, 163)" }}
               itemStyle={{ color: "rgb(96, 165, 250)", fontWeight: "bold" }}
               labelFormatter={(k) => `k=${(k as number).toFixed(3)}`}
-              formatter={(v: number, _name: string, item: { payload?: { strike?: number } }) => {
-                const strike = item?.payload?.strike;
-                return [`${v.toFixed(1)}% (K=$${strike?.toLocaleString("en-US", { maximumFractionDigits: 0 })})`, "IV"];
+             formatter={(v, _name, item) => {
+                const value = typeof v === "number" ? v : Number(v);
+                const strike = (item as { payload?: { strike?: number } })?.payload?.strike;
+                return [`${value.toFixed(1)}% (K=$${strike?.toLocaleString("en-US", { maximumFractionDigits: 0 })})`, "IV"];
               }}
               cursor={{ stroke: "rgb(96, 165, 250)", strokeWidth: 1, strokeDasharray: "3 3" }}
             />
