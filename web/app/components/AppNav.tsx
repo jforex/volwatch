@@ -1,25 +1,22 @@
 "use client";
-
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useVolStreamContext } from "../lib/VolStreamContext";
+import { AlertsTray } from "./AlertsTray";
 
 export function AppNav() {
   const pathname = usePathname();
   const { status } = useVolStreamContext();
-
   const links = [
     { href: "/app", label: "Home" },
     { href: "/app/surface", label: "Vol Surface" },
     { href: "/app/plp", label: "PLP" },
   ];
-
   function isActive(href: string) {
     if (href === "/app") return pathname === "/app";
     return pathname.startsWith(href);
   }
-
   return (
     <nav className="sticky top-0 z-40 border-b border-neutral-800 bg-neutral-950/90 backdrop-blur supports-[backdrop-filter]:bg-neutral-950/75">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
@@ -28,7 +25,6 @@ export function AppNav() {
             <Image src="/logo.png" alt="VWATCH" width={32} height={32} className="object-contain rounded sm:h-9 sm:w-9" />
             <span className="font-[family-name:var(--font-space-grotesk)] text-lg sm:text-xl font-bold tracking-tight text-white">VWATCH</span>
           </Link>
-
           <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
             {links.map((link) => {
               const active = isActive(link.href);
@@ -49,8 +45,8 @@ export function AppNav() {
             })}
           </div>
         </div>
-
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <AlertsTray />
           <span className={`inline-block h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full ${
             status === "open" ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)] animate-pulse"
             : status === "connecting" ? "bg-amber-400"

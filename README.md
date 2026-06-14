@@ -214,6 +214,8 @@ VWATCH ships with three drop-in widgets that any Sui frontend can embed via `<if
 
 ## Roadmap
 
+- **Expanded alert types**: butterfly arbitrage violations, calendar monotonicity failures, PLP utilization thresholds, oracle staleness — all as global stream alerts in the same tray.
+- **Personalized alert preferences via zkLogin (Enoki)**: opt-in alert subscriptions per user. Pick which oracles, which alert types, which severity thresholds. Sessions via zkLogin so it stays Sui-native — no Web2 email/password.
 - **Per-position exposure breakdown**: would require additional backend instrumentation to expose `strikeMatrices` data from the vault.
 - **Drawdown history**: NAV time series persisted to disk for 30/90-day drawdown analytics. Currently we only have the rolling 30-min in-memory buffer.
 - **Cross-venue spread monitor**: VWATCH vs external venues. Cut from v1 because it would break the on-chain-only sourcing claim. Considered for a separate "research mode."
