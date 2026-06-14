@@ -182,9 +182,38 @@ For local dev the defaults work out of the box. For deployment:
 
 ---
 
+
+## Embeddable widgets
+
+VWATCH ships with three drop-in widgets that any Sui frontend can embed via `<iframe>`. No SDK, no API key, no host-side build step. Each widget streams live SVI updates from DeepBook Predict directly.
+
+**Available widgets:**
+
+| Widget | URL | Recommended height |
+|--------|-----|-------------------|
+| 3D Vol Surface | `https://volwatch.vercel.app/embed/vol-surface` | 540px |
+| Skew Curve | `https://volwatch.vercel.app/embed/skew` | 380px |
+| PLP Health | `https://volwatch.vercel.app/embed/plp-health` | 280px |
+
+**Example embed:**
+
+```html
+<iframe
+  src="https://volwatch.vercel.app/embed/vol-surface"
+  width="100%"
+  height="540"
+  frameborder="0"
+  allow="fullscreen"
+  style="border-radius: 8px; border: 1px solid #262626;"
+></iframe>
+```
+
+**Full docs + live previews + copy-paste snippets:** [volwatch.vercel.app/embed](https://volwatch.vercel.app/embed)
+
+---
+
 ## Roadmap
 
-- **Embeddable widget**: drop-in `<iframe>` for partner Sui frontends — `vwatch.vercel.app/embed/vol-surface?oracle=…`, `/embed/plp-health`, etc. v1 stub coming next.
 - **Per-position exposure breakdown**: would require additional backend instrumentation to expose `strikeMatrices` data from the vault.
 - **Drawdown history**: NAV time series persisted to disk for 30/90-day drawdown analytics. Currently we only have the rolling 30-min in-memory buffer.
 - **Cross-venue spread monitor**: VWATCH vs external venues. Cut from v1 because it would break the on-chain-only sourcing claim. Considered for a separate "research mode."

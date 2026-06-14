@@ -211,6 +211,7 @@ export default function Landing() {
                 <p className="text-xs font-bold uppercase tracking-widest text-white mb-4">Product</p>
                 <ul className="space-y-3 text-sm">
                   <li><Link href="/app" className="text-neutral-200 hover:text-white transition-colors">Open Terminal</Link></li>
+                  <li><Link href="/embed" className="text-neutral-200 hover:text-white transition-colors">Embed widgets ↗</Link></li>
                   <li><a href="https://github.com/jforex/volwatch" target="_blank" rel="noreferrer" className="text-neutral-200 hover:text-white transition-colors">Source code</a></li>
                   <li><a href="https://github.com/jforex/volwatch#readme" target="_blank" rel="noreferrer" className="text-neutral-200 hover:text-white transition-colors">Documentation</a></li>
                 </ul>
