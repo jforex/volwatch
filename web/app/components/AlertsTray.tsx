@@ -180,7 +180,7 @@ export function AlertsTray() {
   );
 }
 
-function toneToDot(tone: "blue" | "red" | "emerald" | "amber"): string {
+function toneToDot(tone: "neutral" | "red" | "emerald" | "amber"): string {
   switch (tone) {
     case "red": return "bg-red-500";
     case "emerald": return "bg-emerald-500";
@@ -189,7 +189,7 @@ function toneToDot(tone: "blue" | "red" | "emerald" | "amber"): string {
   }
 }
 
-function toneToText(tone: "blue" | "red" | "emerald" | "amber"): string {
+function toneToText(tone: "neutral" | "red" | "emerald" | "amber"): string {
   switch (tone) {
     case "red": return "text-red-300";
     case "emerald": return "text-emerald-300";

@@ -12,7 +12,7 @@ export type SmileAlert = {
   fromVariant?: string;
   toLabel: string;
   toVariant?: string;
-  toTone: "blue" | "red" | "emerald" | "amber";
+  toTone: "neutral" | "red" | "emerald" | "amber";
   minutesToExpiry: number;
 };
 
