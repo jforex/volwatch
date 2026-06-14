@@ -1,160 +1,204 @@
-<div align="center">
+# VWATCH
 
-<img src="web/public/logo.png" alt="VolWatch" width="160" />
+**A real-time volatility terminal for DeepBook Predict on Sui.**
 
-# VolWatch
+Live: [volwatch.vercel.app](https://volwatch.vercel.app/) · Backend: [volwatch-production.up.railway.app](https://volwatch-production.up.railway.app)
 
-**Real-time volatility terminal for DeepBook Predict.**
+---
 
-Live smile curves · on-chain vault risk · arbitrage detection · trader-readable explanations — all from real Sui events.
+VWATCH reads the DeepBook Predict event stream from Sui testnet, decodes raw SVI calibration parameters, and renders the live implied volatility surface — strike × expiry × IV — alongside vault risk metrics, arbitrage checks, and a scenario simulator. Every number on the screen is computed from on-chain events. No mock data. No interpolation. The protocol speaks; the terminal listens.
 
-*Built for Sui Overflow 2026 · DeepBook Predict track*
-
-</div>
+Built for the Sui Overflow 2026 hackathon (DeepBook Predict track on DeepSurge).
 
 ---
 
 ## What it does
 
-VolWatch decodes DeepBook Predict's volatility surface tick-by-tick and renders it as a Bloomberg-style terminal. Every number on screen is read directly from Sui testnet — no mock data, no interpolation.
+VWATCH answers three questions that DeepBook Predict's own UI does not surface:
 
-**Five live modules:**
-
-| Module | What it shows |
-|---|---|
-| **Vol Smile Viewer** | Decodes Predict's SVI parameters (a, b, m, ρ, σ) from on-chain events and renders the live implied vol smile per expiry. Click any oracle to focus. |
-| **PLP Risk Dashboard** | Vault balance, PLP supply, NAV per share, max payout liability, and utilization — all read directly from the Predict object on-chain every 10s. |
-| **Arbitrage Detection** | Runs Gatheral's butterfly arb-free condition on every smile and checks calendar monotonicity across expiries. Flags violations the protocol itself doesn't surface. |
-| **Term Structure View** | Live oracle list sorted by expiry, each showing ATM IV. See contango, backwardation, and skew shifts instantly across all active expiries. |
-| **Surface Explainer** | Plain-English observations of what a trader should notice right now: crash skew, term structure shape, vault stress, arb violations. Updates live. |
+1. **What does the live vol surface look like?** A 3D Three.js mesh sampling SVI across all active oracles. Smile curves, term structure, skew classification (SMILE / SKEW / SMIRK).
+2. **Is the surface arbitrage-free?** Gatheral butterfly conditions on every smile, calendar monotonicity across adjacent expiries. Violations flagged with severity banners.
+3. **Is PLP safe?** Vault health summary, utilization zones, withdrawal limiter status, max-payout coverage, oracle freshness, and a ±2/5/10% BTC shock simulator with NAV/P&L projections.
 
 ---
 
-## Why it matters
+## Three dashboards
 
-DeepBook Predict ships institutional-grade options pricing to Sui. The protocol emits ~50 events every 3 seconds — spot updates, SVI surface updates, oracle activations, settlements. Reading those events as a human is impossible. Reading them as a trader needs a terminal.
+### Home — Market state at a glance
+Dense terminal layout. Status strip with live counters. Insights panel surfacing the top observations (crash skew, term structure shape, vault stress). BTC spot chart with hover crosshair. Event tape showing the latest 10 protocol events.
 
-VolWatch is that terminal. It exists because:
+### Vol Surface — The math
+3D vol surface (Three.js, thermal-mapped, rotate + zoom + hover precision marker). Term structure curve (ATM IV vs expiry) with contango/backwardation/flat classification. Skew curve (IV vs log-moneyness, nearest expiry). Arbitrage check panel with severity-tinted alerts. Expiry deep-dive showing per-oracle SVI parameters and smile curve. Time travel slider rewinds the entire page up to 30 minutes.
 
-- **Vol surfaces are the heartbeat of options markets.** If you can't see the surface, you can't trust the pricing.
-- **LPs need visibility into vault risk in real time.** PLP holders are taking the other side of every binary position; they deserve to see exposure, utilization, and NAV without parsing on-chain objects themselves.
-- **Arbitrage-free conditions are a data-quality signal.** If a smile fails Gatheral's butterfly test, the protocol's SVI fit is degenerate at that expiry. That matters to both traders and the protocol team.
+### PLP — Liquidity provider risk
+Six panels:
+- **Health Summary** — Vault Balance, PLP Supply, NAV/Share, Utilization, Risk Score (synthetic composite), Health Status.
+- **Vault Utilization** — current %, capacity threshold zones (idle / healthy / aggressive / stressed), interpretation.
+- **Withdrawal Limiter** — available capacity, consumed amount, severity status.
+- **Max Payouts** — worst-case payout obligation vs vault size, coverage ratio.
+- **Oracle Health** — per-oracle freshness traffic lights, aggregate fresh/stale/no-data counts.
+- **Scenario Simulator** — BTC ±2/5/10% shocks → projected Vault P&L, NAV, Utilization, Max Payout.
 
 ---
 
 ## Architecture
 
-**Backend** (`server/`):
-- Polls Predict's `oracle` module events every 3s (cursor-based, normalized to typed events)
-- Polls the Predict object via `getObject` every 10s for vault state
-- Fans out everything via WebSocket to any connected frontend
-- Backfills recent history on startup so new clients render immediately
+DeepBook Predict (Sui testnet)
 
-**Frontend** (`web/`):
-- Next.js 16 + React + Tailwind
-- `useVolStream` hook maintains live state per oracle
-- Pure SVI math in `lib/svi.ts` (calibrated against actual on-chain params)
-- Recharts for every chart, components organized per module
+│
 
-### SVI math note
+│  event stream (prices, svi, activated, settled)
 
-Predict's `OracleSVIUpdated` events emit the surface as 5 numbers (a, b, m, ρ, σ) in fixed-point. Empirically:
+▼
 
-- `a, b, m, σ` are scaled at 1e6
-- `ρ` is scaled at 1e9 (so it lands in [-1, 1])
-- `w(k) = a + b · (ρ(k-m) + sqrt((k-m)² + σ²))` is **per-unit-time variance** (annualized IV²), not standard total variance. So IV at strike K equals `sqrt(w(ln(K/F)))`, not `sqrt(w/T)`.
+┌──────────────────┐
 
-This was inferred from real testnet params and verified against expected BTC short-dated IV ranges. See `web/app/lib/svi.ts`.
+│  Backend (TS)    │  Subscribes to Sui events, mirrors oracle state,
 
----
+│  Railway         │  polls vault snapshot every 5s, captures rolling
 
-## On-chain references (testnet)
+│                  │  30-min history buffer for time travel.
 
-| | |
-|---|---|
-| Predict package | `0xf5ea2b3749c65d6e56507cc35388719aadb28f9cab873696a2f8687f5c785138` |
-| Predict object | `0xc8736204d12f0a7277c86388a68bf8a194b0a14c5538ad13f22cbd8e2a38028a` |
-| Predict registry | `0x43af14fed5480c20ff77e2263d5f794c35b9fab7e2212903127062f4fe2a6e64` |
-| Quote asset | `dusdc::DUSDC` (6 decimals) |
-| PLP coin | `plp::PLP` |
-| Public indexer | `https://predict-server.testnet.mystenlabs.com` |
+└─────────┬────────┘
 
-Events consumed: `OraclePricesUpdated`, `OracleSVIUpdated`, `OracleActivated`, `OracleSettled`.
+│  WebSocket
 
----
+▼
 
-## Run locally
+┌──────────────────┐
 
-**Requirements:** Node 20+, npm.
+│  Frontend (Next) │  Decodes SVI params, computes implied vols, renders
 
-Clone:
+│  Vercel          │  3D mesh, charts, dashboards. Shared Context across
 
-    git clone https://github.com/jforex/volwatch.git
-    cd volwatch
+│                  │  /app/home, /app/surface, /app/plp.
 
-**Backend** (terminal 1):
+└──────────────────┘
 
-    cd server
-    npm install
-    npm run dev
+### Data sourcing — on-chain only
 
-You should see oracle events streaming within seconds. WebSocket listens on `ws://localhost:8080`.
+Every metric in VWATCH derives from Sui/DeepBook Predict directly:
 
-**Frontend** (terminal 2):
+- **Raw on-chain events**: `prices`, `svi`, `activated`, `settled`
+- **Vault state**: polled directly from the Predict object on-chain (balance, PLP supply, utilization, exposure ceiling, withdrawal limiter)
+- **Derived metrics** (computed by VWATCH from raw inputs): ATM IV, smile curves, term structure, butterfly + calendar arb checks, surface explainer text, risk score, scenario projections
 
-    cd web
-    npm install
-    npm run dev
+Two synthetic composites are clearly labeled in the UI:
+- **Risk Score (0-100)**: weighted average of utilization ratio, payout coverage, and withdrawal pressure. Labeled "composite · synthetic" in the Health Summary.
+- **Scenario Simulator projections**: aggregate-sensitivity heuristic. Per-position re-pricing is not modeled. The methodology disclosure inside the panel explains every assumption.
 
-Open http://localhost:3000 for the landing page, or http://localhost:3000/app for the terminal directly.
-
-No wallet, no API keys, no environment variables required. The terminal reads Sui testnet on its own.
+There are no external price feeds, no oracle aggregators, no mock data anywhere.
 
 ---
 
-## Project structure
+## The math — SVI calibration
 
-    volwatch/
-    ├── server/
-    │   └── src/index.ts         # Event poll + vault poll + WebSocket fan-out
-    └── web/
-        └── app/
-            ├── page.tsx                          # Landing page
-            ├── app/page.tsx                      # Terminal dashboard
-            ├── lib/
-            │   ├── useVolStream.ts               # Live state hook
-            │   ├── svi.ts                        # Pure SVI math
-            │   ├── arbitrage.ts                  # Butterfly + calendar checks
-            │   ├── explainer.ts                  # Deterministic surface narrator
-            │   └── format.ts                     # USD, time, ID helpers
-            └── components/
-                ├── SpotSparkline.tsx             # Live BTC mini-chart
-                ├── SmileChart.tsx                # Per-oracle IV smile
-                ├── OracleList.tsx                # Term structure view
-                ├── PLPDashboard.tsx              # Vault risk module
-                ├── ArbCheck.tsx                  # Arb-free condition checks
-                └── SurfaceExplainer.tsx          # Trader-readable observations
+DeepBook Predict emits SVI calibration parameters `(a, b, m, ρ, σ)` per oracle. VWATCH decodes these and computes implied vol via the standard SVI form:
+
+w(k) = a + b · (ρ · (k - m) + √((k - m)² + σ²))
+
+Where `k = log(K/F)` is log-moneyness, `K` is strike, `F` is the forward price.
+
+**Important calibration note**: Predict's SVI returns *variance per unit time* (annualized IV²), not total variance over [0, T]. So implied vol is `σ_IV = √w(k)`, not `√(w(k)/T)`. This was determined empirically from oracle params on testnet. The math lives in `web/app/lib/svi.ts`.
+
+### Arbitrage checks
+
+- **Butterfly (Gatheral's g(k))**: For each smile, we verify the no-arb condition `g(k) ≥ 0` across the strike range. If violated, calls and puts at certain strikes would have a state-price density that goes negative — a free-lunch arbitrage. Implementation: `web/app/lib/arbitrage.ts`.
+- **Calendar monotonicity**: For each adjacent expiry pair, total variance `w(k)` must be non-decreasing in T at every strike. A violation means buying a longer-dated option and selling a shorter-dated one at the same strike yields free convexity. We check the worst-case strike across the smile range.
+
+Both checks classify as `ok`, `warn`, or `violation` with calibrated thresholds.
 
 ---
 
-## What's next
+## Tech stack
 
-- **Time-travel slider** to replay the last hour of surface state
-- **Three.js 3D surface viewer** for full strike × expiry visualization
-- **LLM-powered surface narration** (Claude API) as an upgrade to the deterministic explainer
-- **Multi-underlying support** once Predict adds ETH / SOL oracles on testnet (architecture is already asset-agnostic)
-- **Mainnet support** when Predict launches V1 later in 2026
+**Frontend**
+- Next.js 16 (App Router, Turbopack)
+- TypeScript
+- Tailwind CSS v4
+- Framer Motion (landing animations)
+- Recharts (term structure, skew, smile, spot charts)
+- Three.js + react-three-fiber + drei (3D vol surface)
+
+**Backend**
+- Node.js + TypeScript
+- `@mysten/sui` for Sui event subscriptions and object reads
+- WebSocket (ws) for streaming to the frontend
+- Rolling history buffer for time travel (30 min, 5s sample rate)
+
+**Infrastructure**
+- Frontend on Vercel
+- Backend on Railway
+- Sui testnet RPC (DeepBook Predict package)
+
+---
+
+## Running locally
+
+Prerequisites: Node 20+, npm.
+
+```bash
+git clone https://github.com/jforex/volwatch
+cd volwatch
+```
+
+### Backend
+
+```bash
+cd server
+npm install
+npm start
+```
+
+The backend subscribes to Sui testnet, mirrors oracle state, and listens on WebSocket port 8080 by default.
+
+### Frontend
+
+In a second terminal:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+### Environment variables
+
+For local dev the defaults work out of the box. For deployment:
+
+- `web/.env`: `NEXT_PUBLIC_WS_URL` — backend WebSocket URL (defaults to `ws://localhost:8080` in dev).
+- `server/.env`: Sui RPC endpoint and Predict package/object IDs (defaults to testnet values in code).
+
+---
+
+## Protocol IDs (Sui testnet)
+
+- **Predict package**: `0xf5ea2b3749c65d6e56507cc35388719aadb28f9cab873696a2f8687f5c785138`
+- **Predict object**: `0xc8736204d12f0a7277c86388a68bf8a194b0a14c5538ad13f22cbd8e2a38028a`
+- **Quote token**: `dusdc::DUSDC`
+- **PLP token**: `plp::PLP`
+
+---
+
+## Roadmap
+
+- **Embeddable widget**: drop-in `<iframe>` for partner Sui frontends — `vwatch.vercel.app/embed/vol-surface?oracle=…`, `/embed/plp-health`, etc. v1 stub coming next.
+- **Per-position exposure breakdown**: would require additional backend instrumentation to expose `strikeMatrices` data from the vault.
+- **Drawdown history**: NAV time series persisted to disk for 30/90-day drawdown analytics. Currently we only have the rolling 30-min in-memory buffer.
+- **Cross-venue spread monitor**: VWATCH vs external venues. Cut from v1 because it would break the on-chain-only sourcing claim. Considered for a separate "research mode."
+
+---
+
+## Author
+
+Christian — frontend dev based in Port Harcourt, Nigeria. Building across Web3, fintech, and AI product spaces.
+
+GitHub: [@jforex](https://github.com/jforex)
 
 ---
 
 ## License
 
-MIT.
-
----
-
-<div align="center">
-
-Built with care for Sui Overflow 2026.
-
-</div>
+MIT

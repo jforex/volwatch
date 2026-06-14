@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useRef, useState, Suspense, useEffect } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls, Text } from "@react-three/drei";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Text, Billboard } from "@react-three/drei";
 import * as THREE from "three";
 import { totalVariance } from "../lib/svi";
 import type { OracleState } from "../lib/useVolStream";
@@ -47,7 +47,6 @@ export function VolSurface3D({ oracles, now, isScrubbing = false }: Props) {
   const [resetKey, setResetKey] = useState(0);
   const [hasRendered, setHasRendered] = useState(false);
 
-  // Reset hasRendered when expiries change (e.g. scrubbing changes data)
   const expiries = useMemo(() => {
     return Object.values(oracles)
       .filter(
@@ -56,10 +55,8 @@ export function VolSurface3D({ oracles, now, isScrubbing = false }: Props) {
       .sort((a, b) => a.expiryMs! - b.expiryMs!);
   }, [oracles, now]);
 
-  // Loading state hint
   useEffect(() => {
     if (expiries.length >= 2) {
-      // Tiny delay to let the geometry compute + first frame paint
       const id = setTimeout(() => setHasRendered(true), 250);
       return () => clearTimeout(id);
     } else {
@@ -121,7 +118,6 @@ export function VolSurface3D({ oracles, now, isScrubbing = false }: Props) {
         </Suspense>
       </Canvas>
 
-      {/* Loading state */}
       {!hasRendered && (
         <div className="absolute inset-0 flex items-center justify-center bg-neutral-900/40 backdrop-blur-sm pointer-events-none">
           <div className="text-center">
@@ -137,7 +133,7 @@ export function VolSurface3D({ oracles, now, isScrubbing = false }: Props) {
         </div>
       )}
 
-    {hover && (
+      {hover && (
         <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded border border-neutral-700 bg-neutral-950/95 backdrop-blur px-3 py-2 font-mono text-xs whitespace-nowrap pointer-events-none">
           <div className="text-blue-400 font-bold text-sm">IV {(hover.iv * 100).toFixed(1)}%</div>
           <div className="text-neutral-200 mt-1 text-xs">
@@ -276,7 +272,7 @@ function SurfaceMesh({
     [expiries],
   );
 
-function handlePointerMove(e: { uv?: THREE.Vector2; stopPropagation?: () => void }) {
+  function handlePointerMove(e: { uv?: THREE.Vector2; stopPropagation?: () => void }) {
     if (!e.uv) return;
     const cols = K_STEPS;
     const rows = visibleExpiries.length;
@@ -294,7 +290,7 @@ function handlePointerMove(e: { uv?: THREE.Vector2; stopPropagation?: () => void
 
   return (
     <>
-     <mesh
+      <mesh
         ref={meshRef}
         geometry={geometry}
         onPointerMove={handlePointerMove}
@@ -315,13 +311,65 @@ function handlePointerMove(e: { uv?: THREE.Vector2; stopPropagation?: () => void
   );
 }
 
+// AlwaysOnText: text that renders on top of everything (depthTest off) and faces the camera (billboard).
+// This is how professional 3D viz tools (Plotly, deck.gl) handle axis labels.
+function AlwaysOnText({
+  position,
+  children,
+  fontSize = 0.2,
+  color = "#e5e5e5",
+  fontWeight,
+}: {
+  position: [number, number, number];
+  children: string;
+  fontSize?: number;
+  color?: string;
+  fontWeight?: number;
+}) {
+  return (
+    <Billboard position={position}>
+      <Text
+        fontSize={fontSize}
+        color={color}
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.015}
+        outlineColor="#000000"
+        fontWeight={fontWeight}
+        renderOrder={999}
+        material-depthTest={false}
+        material-transparent={true}
+      >
+        {children}
+      </Text>
+    </Billboard>
+  );
+}
+
 function Axes({ expiries, now }: { expiries: OracleState[]; now: number }) {
   const halfW = PLOT_W / 2;
   const halfD = PLOT_D / 2;
   const ground = -0.02;
 
-  // Compute the actual IV range across all visible oracles for axis labels
+  // Strike labels (real % from spot)
+  const strikePcts = [K_MIN, 0, K_MAX].map((k) => (Math.exp(k) - 1) * 100);
+
+  // Expiry tick labels — sample 3-5 evenly-spaced
   const sortedExpiries = [...expiries].sort((a, b) => a.expiryMs! - b.expiryMs!).slice(0, T_STEPS);
+  const expTicks: { z: number; label: string }[] = [];
+  if (sortedExpiries.length >= 2) {
+    const ticksToShow = Math.min(4, sortedExpiries.length);
+    for (let i = 0; i < ticksToShow; i++) {
+      const idx = Math.floor((i / (ticksToShow - 1)) * (sortedExpiries.length - 1));
+      const o = sortedExpiries[idx];
+      const z = ((idx / Math.max(1, sortedExpiries.length - 1)) - 0.5) * PLOT_D;
+      const mins = (o.expiryMs! - now) / 60000;
+      const label = mins < 60 ? `${Math.round(mins)}m` : `${(mins / 60).toFixed(1)}h`;
+      expTicks.push({ z, label });
+    }
+  }
+
+  // IV tick labels — min / mid / max from the actual data
   let minIv = Infinity;
   let maxIv = -Infinity;
   for (const o of sortedExpiries) {
@@ -339,29 +387,11 @@ function Axes({ expiries, now }: { expiries: OracleState[]; now: number }) {
   if (!isFinite(maxIv) || maxIv === minIv) maxIv = minIv + 0.01;
   const midIv = (minIv + maxIv) / 2;
 
-  // Expiry tick labels — sample 3 evenly-spaced expiries from the sorted list
-  const expTicks: { z: number; label: string }[] = [];
-  if (sortedExpiries.length >= 2) {
-    const ticksToShow = Math.min(3, sortedExpiries.length);
-    for (let i = 0; i < ticksToShow; i++) {
-      const idx = Math.floor((i / (ticksToShow - 1)) * (sortedExpiries.length - 1));
-      const o = sortedExpiries[idx];
-      const z = ((idx / Math.max(1, sortedExpiries.length - 1)) - 0.5) * PLOT_D;
-      const mins = (o.expiryMs! - now) / 60000;
-      const label = mins < 60 ? `${Math.round(mins)}m` : `${(mins / 60).toFixed(1)}h`;
-      expTicks.push({ z, label });
-    }
-  }
-
-  // IV tick labels at min / mid / max
   const ivTicks = [
     { y: ground, label: `${(minIv * 100).toFixed(0)}%` },
     { y: ground + PLOT_H / 2, label: `${(midIv * 100).toFixed(0)}%` },
     { y: ground + PLOT_H, label: `${(maxIv * 100).toFixed(0)}%` },
   ];
-
-  // Strike tick labels in real-world percent
-  const strikePcts = [K_MIN, 0, K_MAX].map((k) => (Math.exp(k) - 1) * 100);
 
   return (
     <group>
@@ -377,7 +407,7 @@ function Axes({ expiries, now }: { expiries: OracleState[]; now: number }) {
       </line>
       <line>
         <bufferGeometry>
-         <bufferAttribute
+          <bufferAttribute
             attach="attributes-position"
             args={[new Float32Array([-halfW, ground, -halfD, -halfW, ground, halfD]), 3]}
           />
@@ -386,7 +416,7 @@ function Axes({ expiries, now }: { expiries: OracleState[]; now: number }) {
       </line>
       <line>
         <bufferGeometry>
-         <bufferAttribute
+          <bufferAttribute
             attach="attributes-position"
             args={[new Float32Array([-halfW, ground, halfD, -halfW, ground + PLOT_H, halfD]), 3]}
           />
@@ -394,52 +424,60 @@ function Axes({ expiries, now }: { expiries: OracleState[]; now: number }) {
         <lineBasicMaterial color="#737373" />
       </line>
 
-      {/* Axis name labels — plainer wording */}
-      <Text position={[0, ground - 0.35, halfD + 0.5]} fontSize={0.24} color="#93c5fd" anchorX="center">
+      {/* Axis name labels — always on top, always facing camera */}
+      <AlwaysOnText position={[0, ground - 0.45, halfD + 0.5]} fontSize={0.26} color="#93c5fd" fontWeight={700}>
         STRIKE (vs spot)
-      </Text>
-      <Text position={[-halfW - 0.75, ground - 0.1, 0]} fontSize={0.24} color="#93c5fd" rotation={[0, -Math.PI / 2, 0]} anchorX="center">
+      </AlwaysOnText>
+      <AlwaysOnText position={[-halfW - 0.7, ground + PLOT_H / 2, 0]} fontSize={0.26} color="#93c5fd" fontWeight={700}>
         TIME TO EXPIRY
-      </Text>
-      <Text position={[-halfW - 0.55, PLOT_H / 2, halfD + 0.3]} fontSize={0.24} color="#93c5fd" rotation={[0, 0, Math.PI / 2]} anchorX="center">
+      </AlwaysOnText>
+      <AlwaysOnText position={[-halfW - 0.7, PLOT_H + 0.25, halfD]} fontSize={0.26} color="#93c5fd" fontWeight={700}>
         IMPLIED VOL
-      </Text>
+      </AlwaysOnText>
 
-      {/* Strike tick labels — real percent */}
-      <Text position={[-halfW, ground - 0.18, halfD + 0.18]} fontSize={0.17} color="#a3a3a3" anchorX="center">
-        {strikePcts[0].toFixed(0)}%
-      </Text>
-      <Text position={[0, ground - 0.18, halfD + 0.18]} fontSize={0.17} color="#a3a3a3" anchorX="center">
+      {/* Strike tick labels */}
+      <AlwaysOnText position={[-halfW, ground - 0.2, halfD + 0.2]} fontSize={0.2} color="#e5e5e5">
+        {`${strikePcts[0].toFixed(0)}%`}
+      </AlwaysOnText>
+      <AlwaysOnText position={[0, ground - 0.2, halfD + 0.2]} fontSize={0.2} color="#e5e5e5">
         ATM
-      </Text>
-      <Text position={[halfW, ground - 0.18, halfD + 0.18]} fontSize={0.17} color="#a3a3a3" anchorX="center">
-        +{strikePcts[2].toFixed(0)}%
-      </Text>
+      </AlwaysOnText>
+      <AlwaysOnText position={[halfW, ground - 0.2, halfD + 0.2]} fontSize={0.2} color="#e5e5e5">
+        {`+${strikePcts[2].toFixed(0)}%`}
+      </AlwaysOnText>
 
-      {/* Expiry tick labels — bigger */}
+      {/* Expiry tick labels — placed at the back-left edge with billboards */}
       {expTicks.map((t, i) => (
-        <Text
-          key={`exp-${i}`}
-          position={[-halfW - 0.18, ground - 0.05, t.z]}
-          fontSize={0.16}
-          color="#a3a3a3"
-          anchorX="right"
-        >
-          {t.label}
-        </Text>
+        <group key={`exp-${i}`}>
+          <mesh position={[-halfW, ground, t.z]}>
+            <sphereGeometry args={[0.05, 12, 12]} />
+            <meshBasicMaterial color="#60a5fa" depthTest={false} />
+          </mesh>
+          <AlwaysOnText
+            position={[-halfW - 0.35, ground + 0.05, t.z]}
+            fontSize={0.2}
+            color="#e5e5e5"
+          >
+            {t.label}
+          </AlwaysOnText>
+        </group>
       ))}
 
-    {/* IV tick labels — actual percent values (placed on the FAR side, away from the IMPLIED VOL label) */}
+      {/* IV tick labels — back-left vertical edge with billboards */}
       {ivTicks.map((t, i) => (
-        <Text
-          key={`iv-${i}`}
-          position={[-halfW - 0.9, t.y, halfD + 0.18]}
-          fontSize={0.16}
-          color="#a3a3a3"
-          anchorX="right"
-        >
-          {t.label}
-        </Text>
+        <group key={`iv-${i}`}>
+          <mesh position={[-halfW, t.y, halfD]}>
+            <sphereGeometry args={[0.05, 12, 12]} />
+            <meshBasicMaterial color="#60a5fa" depthTest={false} />
+          </mesh>
+          <AlwaysOnText
+            position={[-halfW - 0.35, t.y, halfD]}
+            fontSize={0.2}
+            color="#e5e5e5"
+          >
+            {t.label}
+          </AlwaysOnText>
+        </group>
       ))}
     </group>
   );
