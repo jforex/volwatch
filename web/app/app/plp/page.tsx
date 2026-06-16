@@ -802,9 +802,16 @@ function projectShock(
   const utilRatio = vault.exposureCeilingPct > 0 ? vault.utilizationPct / vault.exposureCeilingPct : 0;
   const absShock = Math.abs(shock);
 
-  // Max payout sensitivity: grows non-linearly with shock magnitude.
-  // At ±10% shock with high util, expect ~30-50% increase in worst-case payout.
-  const maxPayoutMultiplier = 1 + (absShock * 3) * (0.5 + utilRatio);
+  // ASYMMETRIC sensitivity model:
+  // LP vaults selling vol on crypto are typically net-short more puts than calls (crash skew).
+  // → A DOWN shock hits the put leg harder than an equivalent UP shock hits the call leg.
+  // → This matches the SVI rho < 0 observed across BTC oracles (crash skew baked into the smile).
+  //
+  // Downside multiplier: 1.4x base. Upside multiplier: 0.8x base.
+  // Asymmetry scales with how exposed the book is — collapses at idle.
+  const directionalBias = shock < 0 ? 1.4 : 0.8;
+  const directionalWeight = 1 + (directionalBias - 1) * Math.min(1, utilRatio + 0.3);
+  const maxPayoutMultiplier = 1 + (absShock * 3) * (0.5 + utilRatio) * directionalWeight;
   const projectedMaxPayout = vault.totalMaxPayout * maxPayoutMultiplier;
 
   // Projected vault P&L: assume realized losses are some fraction of the marginal max payout increase.
