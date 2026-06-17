@@ -28,7 +28,7 @@ VWATCH answers three questions that DeepBook Predict's own UI does not surface:
 Dense terminal layout. Status strip with live counters. Insights panel surfacing the top observations (crash skew, term structure shape, vault stress). BTC spot chart with hover crosshair. Event tape showing the latest 10 protocol events.
 
 ### Vol Surface — The math
-3D vol surface (Three.js, thermal-mapped, rotate + zoom + hover precision marker). Term structure curve (ATM IV vs expiry) with contango/backwardation/flat classification. Skew curve (IV vs log-moneyness, nearest expiry). Arbitrage check panel with severity-tinted alerts. Expiry deep-dive showing per-oracle SVI parameters and smile curve. Time travel slider rewinds the entire page up to 30 minutes.
+3D vol surface (Three.js, thermal-mapped, rotate + zoom + hover precision marker). Term structure curve (ATM IV vs expiry) with contango/backwardation/flat classification. Skew curve (IV vs log-moneyness, nearest expiry). Arbitrage check panel with severity-tinted alerts. **IV vs Realized Volatility chart** — overlays SVI-derived ATM IV against rolling 10-minute realized vol computed from spot ticks, with IV − RV spread classification (IV RICH / FAIR / DISCOUNT) to signal option-writing edge. Expiry deep-dive showing per-oracle SVI parameters and smile curve. Time travel slider rewinds the entire page up to 30 minutes.
 
 ### PLP — Liquidity provider risk
 Six panels:
@@ -38,6 +38,7 @@ Six panels:
 - **Max Payouts** — worst-case payout obligation vs vault size, coverage ratio.
 - **Oracle Health** — per-oracle freshness traffic lights, aggregate fresh/stale/no-data counts.
 - **Scenario Simulator** — BTC ±2/5/10% shocks → projected Vault P&L, NAV, Utilization, Max Payout.
+- **Risk Exposure Heatmap** — strike × expiry grid showing per-oracle net call/put exposure across the vault. Reads `vault.oracle_matrices` Table on-chain via dynamic-field walk + per-oracle expiry enrichment. Cells colored green (vault short calls — rally risk) or red (vault short puts — drop risk), intensity = magnitude.
 
 ---
 
