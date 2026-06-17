@@ -151,8 +151,8 @@ export function IvVsRvChart({ history, spotHistory }: Props) {
                 dataKey="ts"
                 stroke="#737373"
                 tick={{ fontSize: 11, fontFamily: "monospace", fill: "#a3a3a3" }}
-                tickFormatter={(ts: number) => {
-                  const d = new Date(ts);
+               tickFormatter={(ts) => {
+                  const d = new Date(typeof ts === "number" ? ts : Number(ts));
                   return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
                 }}
                 minTickGap={40}
@@ -171,8 +171,8 @@ export function IvVsRvChart({ history, spotHistory }: Props) {
                   fontFamily: "monospace",
                   fontSize: 11,
                 }}
-                labelFormatter={(ts: number) => {
-                  const d = new Date(ts);
+               labelFormatter={(ts) => {
+                  const d = new Date(typeof ts === "number" ? ts : Number(ts));
                   return d.toLocaleTimeString();
                 }}
                 formatter={(v) => (typeof v === "number" ? `${v.toFixed(2)}%` : "—")}
