@@ -32,6 +32,7 @@ Dense terminal layout. Status strip with live counters. Insights panel surfacing
 
 ### PLP — Liquidity provider risk
 Six panels:
+
 - **Health Summary** — Vault Balance, PLP Supply, NAV/Share, Utilization, Risk Score (synthetic composite), Health Status.
 - **Vault Utilization** — current %, capacity threshold zones (idle / healthy / aggressive / stressed), interpretation.
 - **Withdrawal Limiter** — available capacity, consumed amount, severity status.
@@ -214,6 +215,8 @@ VWATCH ships with three drop-in widgets that any Sui frontend can embed via `<if
 ---
 
 ## Roadmap
+- **Configurable RV lookback window**: user-selectable timeframe (10m / 30m / 1h / 4h / 24h) for IV vs Realized Vol comparison. Each window tells a different story — short windows catch intraday spikes, long windows signal regime shifts.
+- **Status badge hysteresis**: prevent IV RICH / FAIR / DISCOUNT label flicker when the spread sits near a threshold boundary. Require crossing by a small margin before flipping.
 
 - **Expanded alert types**: butterfly arbitrage violations, calendar monotonicity failures, PLP utilization thresholds, oracle staleness — all as global stream alerts in the same tray.
 - **Personalized alert preferences via zkLogin (Enoki)**: opt-in alert subscriptions per user. Pick which oracles, which alert types, which severity thresholds. Sessions via zkLogin so it stays Sui-native — no Web2 email/password.
