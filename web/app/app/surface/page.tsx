@@ -8,14 +8,15 @@ import { OracleList } from "../../components/OracleList";
 import { ArbCheck } from "../../components/ArbCheck";
 import { TermStructureChart } from "../../components/TermStructureChart";
 import { SkewChart } from "../../components/SkewChart";
+import { IvVsRvChart } from "../../components/IvVsRvChart";
 import { VolSurface3D } from "../../components/VolSurface3D";
 import { ExpandableChart } from "../../components/ExpandableChart";
-import { atmIV } from "../../lib/svi";
+import { atmIV, timeToExpiry } from "../../lib/svi";
 import { classifySmile } from "../../lib/classifySmile";
 import { formatTime } from "../../lib/format";
 
 export default function SurfacePage() {
-  const { oracles, scrubTs, setScrubTs, scrubRange, isScrubbing, goLive, status, recent } = useVolStreamContext();
+ const { oracles, history, spotHistory, scrubTs, setScrubTs, scrubRange, isScrubbing, goLive, status, recent } = useVolStreamContext();
   const [selectedId, setSelectedId] = useState<string | null>(null);
  const [liveNow, setLiveNow] = useState(Date.now());
 
@@ -61,7 +62,9 @@ export default function SurfacePage() {
   const expiryCount = activeWithSvi.length;
 
   const nearestOracle = [...activeWithSvi].sort((a, b) => (a.expiryMs ?? 0) - (b.expiryMs ?? 0))[0];
-  const nearestAtm = nearestOracle && nearestOracle.svi ? atmIV(nearestOracle.svi) : null;
+ const nearestAtm = nearestOracle && nearestOracle.svi && nearestOracle.expiryMs
+    ? atmIV(nearestOracle.svi, timeToExpiry(nearestOracle.expiryMs, now))
+    : null;
 
   const lastTickTs = recent.length > 0 ? recent[0].ts : null;
 
@@ -185,6 +188,11 @@ export default function SurfacePage() {
             <ArbCheck oracles={oracles} />
           </div>
         </section>
+
+        {/* IV vs Realized Vol */}
+        <div className="mt-3">
+          <IvVsRvChart history={history} spotHistory={spotHistory} />
+        </div>
 
         {/* Oracle list + Expiry deep-dive */}
         <div className="mt-3 grid grid-cols-12 gap-3">

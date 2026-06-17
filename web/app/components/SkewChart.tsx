@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { totalVariance, atmIV } from "../lib/svi";
+import { atmIV, totalVariance, timeToExpiry } from "../lib/svi";
 import { classifySmile } from "../lib/classifySmile";
 import type { OracleState } from "../lib/useVolStream";
 
@@ -42,17 +42,18 @@ const { data, shape, nearestExpiryMs, atm } = useMemo(() => {
     const params = nearest.svi!;
 
     const points: { k: number; strike: number; iv: number }[] = [];
-    for (let k = -0.3; k <= 0.3 + 1e-9; k += 0.025) {
+  for (let k = -0.3; k <= 0.3 + 1e-9; k += 0.025) {
       const w = totalVariance(params, k);
-      const iv = w > 0 ? Math.sqrt(w) : 0;
+      const ivRaw = w > 0 ? Math.sqrt(w) * 100 : 0;
+      // Cap at 200% for display readability — testnet SVI calibration can blow up at far OTM
+      const iv = Math.min(ivRaw, 200);
       points.push({
         k,
         strike: F * Math.exp(k),
-        iv: iv * 100,
+        iv,
       });
     }
-
-    const atmValue = atmIV(params) * 100;
+    const atmValue = Math.min(atmIV(params) * 100, 200);
     const classification = classifySmile(params);
 
     return {

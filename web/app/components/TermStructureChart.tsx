@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   ReferenceDot,
 } from "recharts";
-import { atmIV } from "../lib/svi";
+import { atmIV, timeToExpiry } from "../lib/svi";
 import type { OracleState } from "../lib/useVolStream";
 
 type Props = {
@@ -31,11 +31,12 @@ const data = useMemo(() => {
           o.expiryMs > now,
       )
       .map((o) => {
-        const iv = atmIV(o.svi!);
+      const ivRaw = atmIV(o.svi!) * 100;
+        const iv = Math.min(ivRaw, 200);
         return {
           expiryMs: o.expiryMs!,
           minutesOut: (o.expiryMs! - now) / 60000,
-          iv: iv * 100,
+          iv,
           oracleId: o.oracleId,
         };
       })

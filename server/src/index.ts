@@ -397,17 +397,19 @@ async function main() {
  setInterval(async () => {
     if (!oracleMatricesTableId) return;
     try {
-     const snap = await fetchExposureSnapshot(client as any, oracleMatricesTableId);
-      // Enrich with expiries from the server-side oracle cache (populated by activated events)
+    const snap = await fetchExposureSnapshot(client as any, oracleMatricesTableId);
+      // Reverse-sync: write expiries from on-chain exposure data back into serverOracles
+      // so history frames pick them up. The exposure walker fetches each oracle's expiry directly from chain.
       for (const o of snap.oracles) {
-        const cached = serverOracles[o.oracleId];
-        if (cached?.expiryMs) {
-          (o as any).expiryMs = cached.expiryMs;
+        if (o.expiryMs) {
+          const cached = serverOracles[o.oracleId] ?? { oracleId: o.oracleId };
+          cached.expiryMs = o.expiryMs;
+          serverOracles[o.oracleId] = cached;
         }
       }
       latestExposure = snap;
       const totalOracles = snap.oracles.length;
-      
+
       const totalBins = snap.oracles.reduce((sum, o) => sum + o.bins.length, 0);
       console.log(`[exposure] ${totalOracles} oracles · ${totalBins} active bins (broadcasting…)`);
       try {

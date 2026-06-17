@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useVolStreamContext } from "../lib/VolStreamContext";
 import { formatTime, formatUSD, shortId } from "../lib/format";
 import { SpotChart } from "../components/SpotChart";
-import { atmIV } from "../lib/svi";
+import { atmIV, timeToExpiry } from "../lib/svi";
 import { explainSurface } from "../lib/explainer";
 
 export default function Home() {
@@ -21,7 +21,9 @@ export default function Home() {
     .filter((o) => o.svi && o.forward && o.expiryMs && o.expiryMs > now)
     .sort((a, b) => (a.expiryMs ?? 0) - (b.expiryMs ?? 0))[0];
 
-  const atm = nearestOracle && nearestOracle.svi ? atmIV(nearestOracle.svi) : null;
+  const atm = nearestOracle && nearestOracle.svi && nearestOracle.expiryMs
+    ? atmIV(nearestOracle.svi, timeToExpiry(nearestOracle.expiryMs, now))
+    : null;
 
   const util = vault ? vault.utilizationPct : null;
   const high = spotHistory.length > 0 ? Math.max(...spotHistory.map((d) => d.spot)) : null;

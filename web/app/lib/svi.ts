@@ -1,8 +1,9 @@
 // SVI math for DeepBook Predict.
 //
-// IMPORTANT: Predict's SVI returns variance per unit time (annualized IV²),
-// NOT standard "total variance over [0,T]". So IV = sqrt(w), not sqrt(w/T).
-// Inferred empirically from oracle params on testnet.
+// CORRECTION (verified empirically Jan 2026): Predict's SVI returns
+// TOTAL variance over [0, T], the standard Gatheral SVI form.
+// → Implied vol: σ_IV = sqrt(w(k) / T), where T is time to expiry in years.
+// Earlier guess that w was already annualized produced 100× too-small IVs.
 
 export type SVIParams = {
   a: number;
@@ -24,6 +25,7 @@ export function impliedVol(
   params: SVIParams,
   strike: number,
   forward: number,
+  _T?: number,
 ): number {
   if (forward <= 0) return NaN;
   const k = Math.log(strike / forward);
@@ -32,8 +34,8 @@ export function impliedVol(
   return Math.sqrt(w);
 }
 
-/** ATM implied vol — IV at forward (k=0). */
-export function atmIV(params: SVIParams): number {
+/** ATM implied vol — IV at forward (k=0). Predict's SVI returns annualized variance. */
+export function atmIV(params: SVIParams, _T?: number): number {
   const w = totalVariance(params, 0);
   if (w <= 0) return NaN;
   return Math.sqrt(w);

@@ -30,7 +30,7 @@ export function OracleList({ oracles, selectedId, onSelect }: Props) {
         forward: o.forward,
         expiryMs: o.expiryMs,
         minsToExpiry: o.expiryMs !== undefined ? Math.round((o.expiryMs - now) / 60000) : undefined,
-        atmIvPct: o.svi ? atmIV(o.svi) * 100 : undefined,
+        atmIvPct: o.svi && o.expiryMs ? atmIV(o.svi, (o.expiryMs - now) / (365.25 * 24 * 3600 * 1000)) * 100 : undefined,
         hasFullState: !!(o.svi && o.forward && o.expiryMs),
       }));
     list.sort((a, b) => (a.expiryMs ?? 0) - (b.expiryMs ?? 0));

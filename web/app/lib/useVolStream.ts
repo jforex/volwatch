@@ -92,7 +92,7 @@ type RawHistoryFrame = {
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8080";
 
-const SCALE_AB_M_SIGMA = 1e6;
+const SCALE_AB_M_SIGMA = 1e7;
 const SCALE_RHO = 1e9;
 
 function toNum(v: unknown): number {

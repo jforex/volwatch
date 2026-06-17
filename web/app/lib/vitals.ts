@@ -52,8 +52,10 @@ function btcVolVital(oracles: Array<{ svi: NonNullable<OracleState["svi"]>; expi
     };
   }
   // Use shortest expiry as the indicator (most market-sensitive)
-  const sorted = [...oracles].sort((a, b) => a.expiryMs - b.expiryMs);
-  const iv = atmIV(sorted[0].svi) * 100;
+const sorted = [...oracles].sort((a, b) => a.expiryMs - b.expiryMs);
+  const nowMs = Date.now();
+  const T = (sorted[0].expiryMs - nowMs) / (365.25 * 24 * 3600 * 1000);
+  const iv = atmIV(sorted[0].svi, T) * 100;
 
   let status: string;
   let detail: string;
@@ -205,9 +207,12 @@ function termStructureVital(
       score: 0,
     };
   }
-  const sorted = [...oracles].sort((a, b) => a.expiryMs - b.expiryMs);
-  const shortIv = atmIV(sorted[0].svi) * 100;
-  const longIv = atmIV(sorted[sorted.length - 1].svi) * 100;
+const sorted = [...oracles].sort((a, b) => a.expiryMs - b.expiryMs);
+  const nowMs = Date.now();
+  const Tshort = (sorted[0].expiryMs - nowMs) / (365.25 * 24 * 3600 * 1000);
+  const Tlong = (sorted[sorted.length - 1].expiryMs - nowMs) / (365.25 * 24 * 3600 * 1000);
+  const shortIv = atmIV(sorted[0].svi, Tshort) * 100;
+  const longIv = atmIV(sorted[sorted.length - 1].svi, Tlong) * 100;
 
   let status: string;
   let detail: string;

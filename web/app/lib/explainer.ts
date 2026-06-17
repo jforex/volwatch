@@ -49,8 +49,10 @@ export function explainSurface(
     );
     const shortest = sorted[0];
     const longest = sorted[sorted.length - 1];
-    const shortIv = atmIV(shortest.svi) * 100;
-    const longIv = atmIV(longest.svi) * 100;
+   const Tshort = (shortest.expiryMs - now) / (365.25 * 24 * 3600 * 1000);
+    const Tlong = (longest.expiryMs - now) / (365.25 * 24 * 3600 * 1000);
+    const shortIv = atmIV(shortest.svi, Tshort) * 100;
+    const longIv = atmIV(longest.svi, Tlong) * 100;
     const shortMins = Math.round(
       (shortest.expiryMs - now) / 60000,
     );
