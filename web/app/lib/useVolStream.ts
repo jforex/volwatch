@@ -25,6 +25,30 @@ export type OracleState = {
   svi?: SVIParams;
 };
 
+export type StrikeBin = {
+  strikeMid: number;
+  notionalUp: number;
+  notionalDn: number;
+  net: number;
+};
+
+export type OracleExposure = {
+  oracleId: string;
+  expiryMs?: number;
+  minStrike: number;
+  maxStrike: number;
+  mintedMinStrike: number;
+  mintedMaxStrike: number;
+  mtm: number;
+  bins: StrikeBin[];
+  totalUp: number;
+  totalDn: number;
+};
+export type ExposureSnapshot = {
+  ts: number;
+  oracles: OracleExposure[];
+};
+
 export type VaultSnapshot = {
   ts: number;
   vaultBalance: number;
@@ -118,6 +142,7 @@ export function useVolStream() {
   const [spotHistory, setSpotHistory] = useState<{ ts: number; spot: number }[]>([]);
   const [oracles, setOracles] = useState<Record<string, OracleState>>({});
   const [vault, setVault] = useState<VaultSnapshot | null>(null);
+  const [exposure, setExposure] = useState<ExposureSnapshot | null>(null);
   const [history, setHistory] = useState<HistoryFrame[]>([]);
   const [scrubTs, setScrubTs] = useState<number | null>(null);
 
@@ -178,6 +203,12 @@ export function useVolStream() {
           setVault(parsed.data as VaultSnapshot);
           return;
         }
+
+        if (parsed.type === "exposure") {
+          setExposure(parsed.data as ExposureSnapshot);
+          return;
+        }
+
         if (parsed.type === "event") {
           const evt = parsed.data as NormalizedEvent;
 
@@ -259,6 +290,7 @@ export function useVolStream() {
     spotHistory,
     oracles: resolvedOracles,
     vault: resolvedVault,
+    exposure,
     oracleCount: Object.keys(resolvedOracles).length,
     history,
     scrubTs,

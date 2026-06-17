@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useVolStreamContext } from "../../lib/VolStreamContext";
 import { TimeTravel } from "../../components/TimeTravel";
+import { RiskHeatmap } from "../../components/RiskHeatmap";
 import { formatUSD, formatTime } from "../../lib/format";
 
 export default function PLPPage() {
-const { vault, oracles, latestSpot, scrubTs, setScrubTs, scrubRange, isScrubbing, goLive, status, recent } = useVolStreamContext();
+const { vault, oracles, latestSpot, exposure, scrubTs, setScrubTs, scrubRange, isScrubbing, goLive, status, recent } = useVolStreamContext();
   const [liveNow, setLiveNow] = useState(Date.now());
 
   useEffect(() => {
@@ -94,13 +95,25 @@ const { vault, oracles, latestSpot, scrubTs, setScrubTs, scrubRange, isScrubbing
               <WithdrawalLimiter vault={vault} />
             </div>
 
-            <div className="mt-3 grid grid-cols-12 gap-3">
+           <div className="mt-3 grid grid-cols-12 gap-3">
               <MaxPayouts vault={vault} />
               <OracleHealth oracles={oracles} recent={recent} now={now} />
             </div>
 
-           <div className="mt-3">
+            <div className="mt-3">
               <ScenarioSimulator vault={vault} oracles={oracles} latestSpot={latestSpot} now={now} />
+            </div>
+
+            <div className="mt-3">
+              <RiskHeatmap
+                exposure={exposure}
+                now={now}
+                oracleExpiries={Object.fromEntries(
+                  Object.values(oracles)
+                    .filter((o) => o.expiryMs)
+                    .map((o) => [o.oracleId, o.expiryMs!]),
+                )}
+              />
             </div>
           </>
         )}

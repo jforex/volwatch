@@ -305,7 +305,7 @@ function SurfaceMesh({
         />
       </mesh>
       <mesh geometry={geometry} renderOrder={1}>
-        <meshBasicMaterial color="#0a0a0a" wireframe transparent opacity={0.55} />
+        <meshBasicMaterial color="#1a1a1a" wireframe transparent opacity={0.2} />
       </mesh>
     </>
   );
@@ -351,14 +351,23 @@ function Axes({ expiries, now }: { expiries: OracleState[]; now: number }) {
   const halfD = PLOT_D / 2;
   const ground = -0.02;
 
-  // Strike labels (real % from spot)
-  const strikePcts = [K_MIN, 0, K_MAX].map((k) => (Math.exp(k) - 1) * 100);
+  // ---------- TICK DATA ----------
+  // 5 strike ticks
+  const strikeTicks: { x: number; label: string }[] = [];
+  for (let i = 0; i < 5; i++) {
+    const t = i / 4;
+    const k = K_MIN + (K_MAX - K_MIN) * t;
+    const x = (t - 0.5) * PLOT_W;
+    const pct = (Math.exp(k) - 1) * 100;
+    const label = i === 2 ? "ATM" : `${pct >= 0 ? "+" : ""}${pct.toFixed(0)}%`;
+    strikeTicks.push({ x, label });
+  }
 
-  // Expiry tick labels — sample 3-5 evenly-spaced
+  // 5 expiry ticks
   const sortedExpiries = [...expiries].sort((a, b) => a.expiryMs! - b.expiryMs!).slice(0, T_STEPS);
   const expTicks: { z: number; label: string }[] = [];
   if (sortedExpiries.length >= 2) {
-    const ticksToShow = Math.min(4, sortedExpiries.length);
+    const ticksToShow = Math.min(5, sortedExpiries.length);
     for (let i = 0; i < ticksToShow; i++) {
       const idx = Math.floor((i / (ticksToShow - 1)) * (sortedExpiries.length - 1));
       const o = sortedExpiries[idx];
@@ -369,7 +378,7 @@ function Axes({ expiries, now }: { expiries: OracleState[]; now: number }) {
     }
   }
 
-  // IV tick labels — min / mid / max from the actual data
+  // 5 IV ticks
   let minIv = Infinity;
   let maxIv = -Infinity;
   for (const o of sortedExpiries) {
@@ -385,17 +394,49 @@ function Axes({ expiries, now }: { expiries: OracleState[]; now: number }) {
   }
   if (!isFinite(minIv)) minIv = 0;
   if (!isFinite(maxIv) || maxIv === minIv) maxIv = minIv + 0.01;
-  const midIv = (minIv + maxIv) / 2;
 
-  const ivTicks = [
-    { y: ground, label: `${(minIv * 100).toFixed(0)}%` },
-    { y: ground + PLOT_H / 2, label: `${(midIv * 100).toFixed(0)}%` },
-    { y: ground + PLOT_H, label: `${(maxIv * 100).toFixed(0)}%` },
-  ];
+  const ivTicks: { y: number; label: string }[] = [];
+  for (let i = 0; i < 5; i++) {
+    const t = i / 4;
+    const y = ground + t * PLOT_H;
+    const iv = minIv + (maxIv - minIv) * t;
+    ivTicks.push({ y, label: `${(iv * 100).toFixed(0)}%` });
+  }
+
+  // ---------- GRID LINE HELPER ----------
+  function gridLine(start: [number, number, number], end: [number, number, number], key: string) {
+    return (
+      <line key={key}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[new Float32Array([...start, ...end]), 3]}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial color="#737373" transparent opacity={0.55} />
+      </line>
+    );
+  }
 
   return (
     <group>
-      {/* Axis lines */}
+      {/* ===== GRID CAGE ===== */}
+      {/* Floor grid — strike-direction lines */}
+      {strikeTicks.map((t) => gridLine([t.x, ground, -halfD], [t.x, ground, halfD], `floor-x-${t.label}`))}
+      {/* Floor grid — expiry-direction lines */}
+      {expTicks.map((t, i) => gridLine([-halfW, ground, t.z], [halfW, ground, t.z], `floor-z-${i}`))}
+
+      {/* Back wall (perpendicular to expiry) — IV horizontal lines */}
+      {ivTicks.map((t) => gridLine([-halfW, t.y, -halfD], [halfW, t.y, -halfD], `back-iv-${t.label}`))}
+      {/* Back wall — strike vertical lines */}
+      {strikeTicks.map((t) => gridLine([t.x, ground, -halfD], [t.x, ground + PLOT_H, -halfD], `back-x-${t.label}`))}
+
+      {/* Side wall (perpendicular to strike) — IV horizontal lines */}
+      {ivTicks.map((t) => gridLine([-halfW, t.y, -halfD], [-halfW, t.y, halfD], `side-iv-${t.label}`))}
+      {/* Side wall — expiry vertical lines */}
+      {expTicks.map((t, i) => gridLine([-halfW, ground, t.z], [-halfW, ground + PLOT_H, t.z], `side-z-${i}`))}
+
+      {/* ===== AXIS LINES (brighter than grid) ===== */}
       <line>
         <bufferGeometry>
           <bufferAttribute
@@ -403,7 +444,7 @@ function Axes({ expiries, now }: { expiries: OracleState[]; now: number }) {
             args={[new Float32Array([-halfW, ground, halfD, halfW, ground, halfD]), 3]}
           />
         </bufferGeometry>
-        <lineBasicMaterial color="#737373" />
+        <lineBasicMaterial color="#9ca3af" />
       </line>
       <line>
         <bufferGeometry>
@@ -412,7 +453,7 @@ function Axes({ expiries, now }: { expiries: OracleState[]; now: number }) {
             args={[new Float32Array([-halfW, ground, -halfD, -halfW, ground, halfD]), 3]}
           />
         </bufferGeometry>
-        <lineBasicMaterial color="#737373" />
+        <lineBasicMaterial color="#9ca3af" />
       </line>
       <line>
         <bufferGeometry>
@@ -421,59 +462,60 @@ function Axes({ expiries, now }: { expiries: OracleState[]; now: number }) {
             args={[new Float32Array([-halfW, ground, halfD, -halfW, ground + PLOT_H, halfD]), 3]}
           />
         </bufferGeometry>
-        <lineBasicMaterial color="#737373" />
+        <lineBasicMaterial color="#9ca3af" />
       </line>
 
-      {/* Axis name labels — always on top, always facing camera */}
-      <AlwaysOnText position={[0, ground - 0.45, halfD + 0.5]} fontSize={0.26} color="#93c5fd" fontWeight={700}>
+      {/* ===== AXIS NAME LABELS ===== */}
+      <AlwaysOnText position={[0, ground - 0.5, halfD + 0.5]} fontSize={0.26} color="#93c5fd" fontWeight={700}>
         STRIKE (vs spot)
       </AlwaysOnText>
-      <AlwaysOnText position={[-halfW - 0.7, ground + PLOT_H / 2, 0]} fontSize={0.26} color="#93c5fd" fontWeight={700}>
+      <AlwaysOnText position={[-halfW - 0.85, ground + PLOT_H / 2, 0]} fontSize={0.26} color="#93c5fd" fontWeight={700}>
         TIME TO EXPIRY
       </AlwaysOnText>
-      <AlwaysOnText position={[-halfW - 0.7, PLOT_H + 0.25, halfD]} fontSize={0.26} color="#93c5fd" fontWeight={700}>
+      <AlwaysOnText position={[-halfW - 0.85, PLOT_H + 0.3, halfD]} fontSize={0.26} color="#93c5fd" fontWeight={700}>
         IMPLIED VOL
       </AlwaysOnText>
 
-      {/* Strike tick labels */}
-      <AlwaysOnText position={[-halfW, ground - 0.2, halfD + 0.2]} fontSize={0.2} color="#e5e5e5">
-        {`${strikePcts[0].toFixed(0)}%`}
-      </AlwaysOnText>
-      <AlwaysOnText position={[0, ground - 0.2, halfD + 0.2]} fontSize={0.2} color="#e5e5e5">
-        ATM
-      </AlwaysOnText>
-      <AlwaysOnText position={[halfW, ground - 0.2, halfD + 0.2]} fontSize={0.2} color="#e5e5e5">
-        {`+${strikePcts[2].toFixed(0)}%`}
-      </AlwaysOnText>
+      {/* ===== STRIKE TICK LABELS (front floor edge) ===== */}
+      {strikeTicks.map((t) => (
+        <AlwaysOnText
+          key={`tick-x-${t.label}`}
+          position={[t.x, ground - 0.22, halfD + 0.2]}
+          fontSize={0.16}
+          color="#d4d4d8"
+        >
+          {t.label}
+        </AlwaysOnText>
+      ))}
 
-      {/* Expiry tick labels — placed at the back-left edge with billboards */}
+      {/* ===== EXPIRY TICK LABELS (left floor edge) ===== */}
       {expTicks.map((t, i) => (
-        <group key={`exp-${i}`}>
+        <group key={`tick-z-${i}`}>
           <mesh position={[-halfW, ground, t.z]}>
-            <sphereGeometry args={[0.05, 12, 12]} />
+            <sphereGeometry args={[0.04, 12, 12]} />
             <meshBasicMaterial color="#60a5fa" depthTest={false} />
           </mesh>
           <AlwaysOnText
-            position={[-halfW - 0.35, ground + 0.05, t.z]}
-            fontSize={0.2}
-            color="#e5e5e5"
+            position={[-halfW - 0.3, ground + 0.02, t.z]}
+            fontSize={0.16}
+            color="#d4d4d8"
           >
             {t.label}
           </AlwaysOnText>
         </group>
       ))}
 
-      {/* IV tick labels — back-left vertical edge with billboards */}
+      {/* ===== IV TICK LABELS (left vertical edge) ===== */}
       {ivTicks.map((t, i) => (
-        <group key={`iv-${i}`}>
+        <group key={`tick-y-${i}`}>
           <mesh position={[-halfW, t.y, halfD]}>
-            <sphereGeometry args={[0.05, 12, 12]} />
+            <sphereGeometry args={[0.04, 12, 12]} />
             <meshBasicMaterial color="#60a5fa" depthTest={false} />
           </mesh>
           <AlwaysOnText
-            position={[-halfW - 0.35, t.y, halfD]}
-            fontSize={0.2}
-            color="#e5e5e5"
+            position={[-halfW - 0.3, t.y, halfD]}
+            fontSize={0.16}
+            color="#d4d4d8"
           >
             {t.label}
           </AlwaysOnText>

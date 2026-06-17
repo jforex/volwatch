@@ -2,6 +2,7 @@ import { SuiJsonRpcClient, getJsonRpcFullnodeUrl } from "@mysten/sui/jsonRpc";
 import { WebSocketServer, WebSocket } from "ws";
 import { createServer } from "http";
 import "dotenv/config";
+import { fetchExposureSnapshot, type ExposureSnapshot } from "./strikeMatrix.js";
 
 const PREDICT_PACKAGE_ID =
   "0xf5ea2b3749c65d6e56507cc35388719aadb28f9cab873696a2f8687f5c785138";
@@ -39,6 +40,8 @@ const clients = new Set<WebSocket>();
 
 let backfill: NormalizedEvent[] = [];
 let latestVault: VaultSnapshot | null = null;
+let oracleMatricesTableId: string | null = null;
+let latestExposure: ExposureSnapshot | null = null;
 
 // Time-travel: rolling snapshot history of oracle state + vault, last 30 min, sampled every 5s
 type OracleSnapshot = {
@@ -234,6 +237,11 @@ async function pollVault(): Promise<VaultSnapshot | null> {
     const activeStrikeMatrices = Number(
       f.vault.fields.oracle_matrices.fields.size ?? 0,
     );
+    // Cache the oracle_matrices table ID so the exposure poller can walk it
+    const omId = f.vault.fields.oracle_matrices.fields.id?.id;
+    if (omId && typeof omId === "string") {
+      oracleMatricesTableId = omId;
+    }
     const settledOraclesCount = Number(
       f.vault.fields.settled_oracles.fields.size ?? 0,
     );
@@ -373,7 +381,7 @@ async function main() {
     pollEvents().catch((err) => console.error("[poll error]", err.message));
   }, POLL_INTERVAL_MS);
 
-  setInterval(async () => {
+ setInterval(async () => {
     const snap = await pollVault();
     if (snap) {
       latestVault = snap;
@@ -383,6 +391,40 @@ async function main() {
       );
     }
   }, VAULT_POLL_INTERVAL_MS);
+
+  // Exposure (strike-matrix walk) — slow, every 30s. Independent of vault polling.
+  const EXPOSURE_POLL_INTERVAL_MS = 30_000;
+ setInterval(async () => {
+    if (!oracleMatricesTableId) return;
+    try {
+     const snap = await fetchExposureSnapshot(client as any, oracleMatricesTableId);
+      // Enrich with expiries from the server-side oracle cache (populated by activated events)
+      for (const o of snap.oracles) {
+        const cached = serverOracles[o.oracleId];
+        if (cached?.expiryMs) {
+          (o as any).expiryMs = cached.expiryMs;
+        }
+      }
+      latestExposure = snap;
+      const totalOracles = snap.oracles.length;
+      
+      const totalBins = snap.oracles.reduce((sum, o) => sum + o.bins.length, 0);
+      console.log(`[exposure] ${totalOracles} oracles · ${totalBins} active bins (broadcasting…)`);
+      try {
+        const payload = JSON.stringify({ type: "exposure", data: snap });
+        console.log(`[exposure] payload size: ${payload.length} bytes`);
+        for (const ws of clients) {
+          if (ws.readyState === WebSocket.OPEN) ws.send(payload);
+        }
+        console.log(`[exposure] broadcast to ${clients.size} client(s) OK`);
+      } catch (serErr: any) {
+        console.error("[exposure SERIALIZE/SEND error]", serErr.message);
+      }
+    } catch (err: any) {
+      console.error("[exposure poll error]", err.message);
+      console.error(err.stack);
+    }
+  }, EXPOSURE_POLL_INTERVAL_MS);
 
   // Time-travel: capture a snapshot every 5s, trim to 30 min window
   setInterval(() => {
