@@ -82,7 +82,7 @@ const { data, shape, nearestExpiryMs, atm } = useMemo(() => {
     "text-neutral-200";
 
 return (
-    <div className="flex flex-col" style={{ height }}>
+   <div className="flex flex-col" style={{ height }}>
       <div className="px-4 pt-2 pb-1 flex items-baseline justify-between shrink-0">
         <span className={`font-mono text-xs uppercase tracking-widest font-bold ${toneClass}`}>
           {shape?.label}{shape?.variant ? ` (${shape.variant})` : ""}
@@ -90,6 +90,16 @@ return (
         <span className="font-mono text-xs text-neutral-300">
           {expiryLabel} · ATM {atm?.toFixed(1)}%
         </span>
+      </div>
+      {/* Contextual caption — explains why ATM IV may look low, or note wing clipping */}
+      <div className="px-4 pb-1 shrink-0">
+        <p className="font-mono text-xs text-neutral-400">
+          {atm !== null && atm < 15 && minutesToExpiry < 60
+            ? "Near-the-money, minutes to expiry · low ATM IV is expected"
+            : data.some((d) => d.iv >= 200)
+              ? "Far-OTM wings clipped at 200% · testnet calibration may be wide"
+              : "IV across log-moneyness · nearest active expiry"}
+        </p>
       </div>
       <div className="flex-1 px-2 min-h-0">
         <ResponsiveContainer width="100%" height="100%">

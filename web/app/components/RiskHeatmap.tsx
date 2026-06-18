@@ -121,15 +121,21 @@ export function RiskHeatmap({ exposure, now, oracleExpiries }: Props) {
     );
   }
 
-  if (rows.length === 0) {
+if (rows.length === 0) {
     return (
       <section className="rounded border border-neutral-800 bg-neutral-900">
         <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2">
           <span className="font-mono text-xs uppercase tracking-widest text-neutral-300">RISK EXPOSURE HEATMAP</span>
-          <span className="font-mono text-xs text-neutral-200">no active positions</span>
+          <span className="font-mono text-xs text-neutral-200">vault is idle · {exposure.oracles.length} oracles tracked</span>
         </div>
-        <div className="p-8 text-center font-mono text-xs text-neutral-300">
-          No active strike matrices with minted positions.
+        <div className="p-6 sm:p-8 text-center">
+          <p className="font-mono text-sm font-bold text-neutral-200">No minted positions across any active oracle.</p>
+          <p className="mt-2 font-mono text-xs text-neutral-400 leading-relaxed max-w-md mx-auto">
+            The PLP vault is currently under-deployed — traders have not written or bought options on any of the tracked oracles. This is common on testnet between activity bursts.
+          </p>
+          <p className="mt-3 font-mono text-xs text-neutral-500">
+            The heatmap populates automatically when positions appear on-chain.
+          </p>
         </div>
       </section>
     );
@@ -152,6 +158,18 @@ export function RiskHeatmap({ exposure, now, oracleExpiries }: Props) {
             <span className="text-red-400">Red</span> = vault is net short puts (loses if BTC drops through this strike). Intensity = magnitude vs the biggest cell.
           </p>
         </div>
+
+       {/* Activity summary */}
+        {(() => {
+          const totalCells = rows.length * (rows[0] as any).colLabels.length;
+          const activeCells = rows.reduce((sum, r) => sum + r.bins.netByCol.filter((n: number) => n !== 0).length, 0);
+          const fillPct = totalCells > 0 ? (activeCells / totalCells) * 100 : 0;
+          return (
+            <div className="mb-3 font-mono text-xs text-neutral-400">
+              {activeCells} of {totalCells} cells populated ({fillPct.toFixed(1)}%) · {fillPct < 5 ? "vault is mostly idle" : fillPct < 25 ? "light activity" : fillPct < 50 ? "moderate activity" : "heavy activity"}
+            </div>
+          );
+        })()}
 
         {/* Heatmap grid */}
         <div className="overflow-x-auto">

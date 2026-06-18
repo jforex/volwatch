@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import type { HistoryFrame } from "../lib/useVolStream";
 import { totalVariance } from "../lib/svi";
@@ -90,15 +90,40 @@ export function IvVsRvChart({ history, spotHistory }: Props) {
     return { points: pts, currentIv: cIv, currentRv: cRv, spread: sp };
   }, [history, spotHistory]);
 
-  // Status assessment based on spread
+// Status assessment with hysteresis — track last state in a ref so we don't flicker on threshold boundaries
+  const lastStatusRef = useRef<string>("FAIR");
   const status = useMemo(() => {
     if (spread === null || currentIv === null) return { label: "—", tone: "text-neutral-400", desc: "Insufficient data for IV/RV comparison." };
     const ratio = currentIv > 0 ? spread / currentIv : 0;
-    if (ratio > 0.20) return { label: "IV RICH", tone: "text-emerald-400", desc: "Implied vol is well above realized. Selling premium (writing options) is statistically attractive — but check the smile shape for context." };
-    if (ratio > 0.05) return { label: "IV ELEVATED", tone: "text-emerald-300", desc: "IV trades modestly above realized. Mild edge for sellers." };
-    if (ratio > -0.05) return { label: "IV FAIR", tone: "text-neutral-300", desc: "IV and realized are close. No directional edge." };
-    if (ratio > -0.20) return { label: "IV CHEAP", tone: "text-amber-400", desc: "IV is below realized. Buying premium may be attractive if the realized regime persists." };
-    return { label: "IV DISCOUNT", tone: "text-red-400", desc: "Implied vol is materially below realized. Either the market expects calm or the realized window has captured an event spike." };
+    const last = lastStatusRef.current;
+
+    // Hysteresis bands: to ENTER a state, cross the strong threshold; to LEAVE, cross the wider boundary
+    // RICH:     enter > 0.25, leave < 0.15
+    // ELEVATED: enter > 0.08, leave < 0.02
+    // FAIR:     default in -0.05..0.05
+    // CHEAP:    enter < -0.08, leave > -0.02
+    // DISCOUNT: enter < -0.25, leave > -0.15
+    let nextState: "RICH" | "ELEVATED" | "FAIR" | "CHEAP" | "DISCOUNT";
+    if (last === "RICH") nextState = ratio > 0.15 ? "RICH" : ratio > 0.02 ? "ELEVATED" : ratio > -0.02 ? "FAIR" : ratio > -0.15 ? "CHEAP" : "DISCOUNT";
+    else if (last === "ELEVATED") nextState = ratio > 0.25 ? "RICH" : ratio > 0.02 ? "ELEVATED" : ratio > -0.02 ? "FAIR" : ratio > -0.15 ? "CHEAP" : "DISCOUNT";
+    else if (last === "FAIR") nextState = ratio > 0.08 ? "ELEVATED" : ratio < -0.08 ? "CHEAP" : "FAIR";
+    else if (last === "CHEAP") nextState = ratio < -0.25 ? "DISCOUNT" : ratio < -0.02 ? "CHEAP" : ratio < 0.02 ? "FAIR" : ratio < 0.15 ? "ELEVATED" : "RICH";
+    else nextState = ratio < -0.15 ? "DISCOUNT" : ratio < -0.02 ? "CHEAP" : ratio < 0.02 ? "FAIR" : ratio < 0.15 ? "ELEVATED" : "RICH";
+
+    // Promote upward through RICH/ELEVATED in case we start from a low state
+    if (last === "DISCOUNT" || last === "CHEAP" || last === "FAIR") {
+      if (ratio > 0.25) nextState = "RICH";
+    }
+
+    lastStatusRef.current = nextState;
+
+    switch (nextState) {
+      case "RICH": return { label: "IV RICH", tone: "text-emerald-400", desc: "Implied vol is well above realized. Selling premium (writing options) is statistically attractive — but check the smile shape for context." };
+      case "ELEVATED": return { label: "IV ELEVATED", tone: "text-emerald-300", desc: "IV trades modestly above realized. Mild edge for sellers." };
+      case "FAIR": return { label: "IV FAIR", tone: "text-neutral-300", desc: "IV and realized are close. No directional edge." };
+      case "CHEAP": return { label: "IV CHEAP", tone: "text-amber-400", desc: "IV is below realized. Buying premium may be attractive if the realized regime persists." };
+      case "DISCOUNT": return { label: "IV DISCOUNT", tone: "text-red-400", desc: "Implied vol is materially below realized. Either the market expects calm or the realized window has captured an event spike." };
+    }
   }, [spread, currentIv]);
 
   if (history.length === 0 || spotHistory.length < 6) {
