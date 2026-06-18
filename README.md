@@ -215,6 +215,7 @@ VWATCH ships with three drop-in widgets that any Sui frontend can embed via `<if
 ---
 
 ## Roadmap
+- **3D surface history prefill**: render the surface from the rolling history buffer on initial page load so users don't see a "waiting for events" placeholder for the first 30-60 seconds.
 - **Time-travel calibration consistency**: historical IV values in the rolling buffer can show different magnitudes than the live view due to in-memory buffer state and SVI scaling refinements applied mid-session. Fix with persistent SQLite storage of normalized history frames.
 - **Configurable RV lookback window**: user-selectable timeframe (10m / 30m / 1h / 4h / 24h) for IV vs Realized Vol comparison. Each window tells a different story — short windows catch intraday spikes, long windows signal regime shifts.
 - **Status badge hysteresis**: prevent IV RICH / FAIR / DISCOUNT label flicker when the spread sits near a threshold boundary. Require crossing by a small margin before flipping.

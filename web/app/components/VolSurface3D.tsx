@@ -68,8 +68,12 @@ export function VolSurface3D({ oracles, now, isScrubbing = false }: Props) {
     return (
       <div className="flex h-full min-h-[460px] items-center justify-center text-center">
         <div>
-          <p className="font-mono text-xs text-neutral-300">No active oracles with SVI data</p>
-          <p className="mt-1 font-mono text-xs text-neutral-200">waiting for events from the protocol…</p>
+          <div className="inline-flex items-center gap-2 mb-3">
+            <span className="inline-block h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+            <p className="font-mono text-xs uppercase tracking-widest text-amber-300 font-bold">Connecting to Predict</p>
+          </div>
+          <p className="font-mono text-xs text-neutral-300">Waiting for the first SVI oracle update.</p>
+          <p className="mt-1 font-mono text-xs text-neutral-500">Backend subscribes to Sui testnet events — first frame usually lands within 10 seconds of page load.</p>
         </div>
       </div>
     );
@@ -79,9 +83,13 @@ export function VolSurface3D({ oracles, now, isScrubbing = false }: Props) {
     return (
       <div className="flex h-full min-h-[460px] items-center justify-center text-center">
         <div>
-          <p className="font-mono text-xs text-neutral-300">Only 1 active oracle</p>
-          <p className="mt-1 font-mono text-xs text-neutral-200">need at least 2 expiries to render a surface</p>
-          <p className="mt-3 font-mono text-xs text-neutral-300">use the Skew curve to view this single expiry →</p>
+       <div className="inline-flex items-center gap-2 mb-3">
+            <span className="inline-block h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+            <p className="font-mono text-xs uppercase tracking-widest text-amber-300 font-bold">Surface needs 2+ expiries</p>
+          </div>
+          <p className="font-mono text-xs text-neutral-300">Only one active oracle right now.</p>
+          <p className="mt-1 font-mono text-xs text-neutral-500">A 3D surface needs at least two expiries to interpolate between.</p>
+          <p className="mt-3 font-mono text-xs text-blue-300">→ View this oracle in the Skew Curve panel beside this one.</p>
         </div>
       </div>
     );
