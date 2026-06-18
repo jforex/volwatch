@@ -55,7 +55,8 @@ function atmIvFromFrame(frame: HistoryFrame): number | null {
   if (!o.svi || !o.expiryMs) return null;
 const w = totalVariance(o.svi, 0);
   if (w <= 0) return null;
-  return Math.min(Math.sqrt(w), 2); // cap at 200% (display in fraction form)
+  // Soft cap at 500% (5.0 fraction). Anything above that is almost certainly a calibration artifact.
+  return Math.min(Math.sqrt(w), 5);
 }
 
 export function IvVsRvChart({ history, spotHistory }: Props) {

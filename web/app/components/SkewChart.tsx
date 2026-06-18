@@ -42,18 +42,19 @@ const { data, shape, nearestExpiryMs, atm } = useMemo(() => {
     const params = nearest.svi!;
 
     const points: { k: number; strike: number; iv: number }[] = [];
-  for (let k = -0.3; k <= 0.3 + 1e-9; k += 0.025) {
+const ivPoints: { k: number; strike: number; ivRaw: number }[] = [];
+    for (let k = -0.3; k <= 0.3 + 1e-9; k += 0.025) {
       const w = totalVariance(params, k);
       const ivRaw = w > 0 ? Math.sqrt(w) * 100 : 0;
-      // Cap at 200% for display readability — testnet SVI calibration can blow up at far OTM
-      const iv = Math.min(ivRaw, 200);
-      points.push({
-        k,
-        strike: F * Math.exp(k),
-        iv,
-      });
+      ivPoints.push({ k, strike: F * Math.exp(k), ivRaw });
     }
-    const atmValue = Math.min(atmIV(params) * 100, 200);
+    // Dynamic cap based on ATM IV — keeps the smile shape readable while clipping pathological wings
+    const atmRaw = atmIV(params) * 100;
+    const cap = Math.max(150, atmRaw * 6);
+    for (const p of ivPoints) {
+      points.push({ k: p.k, strike: p.strike, iv: Math.min(p.ivRaw, cap) });
+    }
+    const atmValue = Math.min(atmRaw, cap);
     const classification = classifySmile(params);
 
     return {

@@ -22,7 +22,7 @@ type Props = {
 
 export function TermStructureChart({ oracles, now, height = 200 }: Props) {
 const data = useMemo(() => {
-    const points = Object.values(oracles)
+    const raw = Object.values(oracles)
       .filter(
         (o) =>
           o.svi &&
@@ -30,17 +30,26 @@ const data = useMemo(() => {
           o.expiryMs !== undefined &&
           o.expiryMs > now,
       )
-      .map((o) => {
-      const ivRaw = atmIV(o.svi!) * 100;
-        const iv = Math.min(ivRaw, 200);
-        return {
-          expiryMs: o.expiryMs!,
-          minutesOut: (o.expiryMs! - now) / 60000,
-          iv,
-          oracleId: o.oracleId,
-        };
-      })
+      .map((o) => ({
+        expiryMs: o.expiryMs!,
+        minutesOut: (o.expiryMs! - now) / 60000,
+        ivRaw: atmIV(o.svi!) * 100,
+        oracleId: o.oracleId,
+      }))
       .sort((a, b) => a.expiryMs - b.expiryMs);
+
+    // Dynamic cap: clip at max(150%, 3× median IV) so outliers don't flatten the chart
+    // while keeping the line readable when most values are reasonable.
+    const sortedIvs = [...raw.map((p) => p.ivRaw)].sort((a, b) => a - b);
+    const median = sortedIvs.length > 0 ? sortedIvs[Math.floor(sortedIvs.length / 2)] : 100;
+    const cap = Math.max(150, median * 3);
+
+    const points = raw.map((p) => ({
+      expiryMs: p.expiryMs,
+      minutesOut: p.minutesOut,
+      iv: Math.min(p.ivRaw, cap),
+      oracleId: p.oracleId,
+    }));
     return points;
   }, [oracles, now]);
 
